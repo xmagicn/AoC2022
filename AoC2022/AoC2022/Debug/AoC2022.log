@@ -1,6 +1,0 @@
-﻿  main.cpp
-C:\Users\N8\Desktop\AdventOfCode\2022\AoC2022\AoC2022\main.cpp(355,29): warning C4018: '<': signed/unsigned mismatch
-C:\Users\N8\Desktop\AdventOfCode\2022\AoC2022\AoC2022\main.cpp(391,29): warning C4018: '<': signed/unsigned mismatch
-C:\Users\N8\Desktop\AdventOfCode\2022\AoC2022\AoC2022\main.cpp(450,26): warning C4018: '<': signed/unsigned mismatch
-C:\Users\N8\Desktop\AdventOfCode\2022\AoC2022\AoC2022\main.cpp(482,27): warning C4018: '<=': signed/unsigned mismatch
-  AoC2022.vcxproj -> C:\Users\N8\Desktop\AdventOfCode\2022\AoC2022\Debug\AoC2022.exe
