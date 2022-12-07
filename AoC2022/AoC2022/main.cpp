@@ -119,7 +119,7 @@ int Day3Part1( const std::string& Filename )
 		std::string Left, Right;
 		Left = Line.substr( 0, Line.size() / 2 );
 		Right = Line.substr( Line.size() / 2, Line.size() - 1 );
-	
+
 		bool bFoundLetter = false;
 		for ( size_t Idx = 0; Idx < Left.size(); ++Idx )
 		{
@@ -162,7 +162,7 @@ int Day3Part2( const std::string& Filename )
 
 		char line[256];
 		myfile.getline( line, 256 );
-		Lines.push_back(std::string( line ));
+		Lines.push_back( std::string( line ) );
 		myfile.getline( line, 256 );
 		Lines.push_back( std::string( line ) );
 		myfile.getline( line, 256 );
@@ -232,7 +232,7 @@ struct ElfAssignment
 
 	bool DoesOverlap( const ElfAssignment& Other ) const
 	{
-		return !(EndID < Other.StartID || Other.EndID < StartID) || DoesContain(Other) || Other.DoesContain(*this);
+		return !( EndID < Other.StartID || Other.EndID < StartID ) || DoesContain( Other ) || Other.DoesContain( *this );
 	}
 
 	int StartID = 0;
@@ -256,7 +256,7 @@ int Day4Part1( const std::string& Filename )
 		ElfAssignment Elf1( Line.substr( start, end ) );
 		ElfAssignment Elf2( Line.substr( end + 1, std::string::npos ) );
 
-		if ( Elf1.DoesContain(Elf2) || Elf2.DoesContain(Elf1) )
+		if ( Elf1.DoesContain( Elf2 ) || Elf2.DoesContain( Elf1 ) )
 		{
 			++ContainedSum;
 		}
@@ -313,11 +313,11 @@ struct LoadingDock
 void ReadDay5Line( const std::string& Line, int& OutSrc, int& OutDest, int& OutCt )
 {
 	//move 1 from 2 to 1
-	std::string MutLine = Line.substr( 5, std::string::npos);
+	std::string MutLine = Line.substr( 5, std::string::npos );
 	auto start = 0U;
 	auto end = Line.find( " ", 6 );
-	OutCt = stoi(Line.substr( 5, end - 5 ));
-	
+	OutCt = stoi( Line.substr( 5, end - 5 ) );
+
 	start = end - 5;
 	MutLine = Line.substr( end + 6, std::string::npos );
 	end = MutLine.find( " " );
@@ -390,9 +390,9 @@ std::string Day5Part2( const std::string& Filename, int NumDockLines, const Load
 		std::stack<char> Crane;
 		for ( size_t Idx = 0; Idx < Ct; ++Idx )
 		{
-			Crane.push(MutDock.Stacks[Src].top());
+			Crane.push( MutDock.Stacks[Src].top() );
 			MutDock.Stacks[Src].pop();
-		}		
+		}
 		while ( Crane.size() > 0 )
 		{
 			MutDock.Stacks[Dst].push( Crane.top() );
@@ -494,12 +494,249 @@ int Day6Part2( const std::string& Filename )
 	return Answer;
 }
 
+void ReadDay7Line( const std::string& Line, bool& bIsCommand, std::string& First, std::string& Second )
+{
+	auto start = 0U;
+
+	if ( Line.size() > 0 && Line[0] == '$' )
+	{
+		bIsCommand = true;
+		start = 2;
+	}
+	else
+	{
+		bIsCommand = false;
+	}
+
+	auto end = Line.find( " ", start );
+	First = Line.substr( start, end - start );
+	Second = Line.substr( end + 1, std::string::npos );
+}
+
+struct ElfResource
+{
+	ElfResource( std::string& First, std::string& Second )
+	{
+		if ( First == "dir" )
+		{
+			bIsDir = true;
+			ResourceName = Second;
+		}
+		else
+		{
+			ResourceName = Second;
+			ResourceSize = stoi( First );
+		}
+	}
+
+	~ElfResource()
+	{
+		for ( ElfResource* Sub : Resources )
+		{
+			if ( Sub )
+			{
+				delete Sub;
+			}
+		}
+	}
+
+	int CalcSize()
+	{
+		if ( !bIsDir )
+		{
+			return ResourceSize;
+		}
+
+		int SumResources = 0;
+		for ( ElfResource* Curr : Resources )
+		{
+			SumResources += Curr->CalcSize();
+		}
+		ResourceSize = SumResources;
+		return SumResources;
+	}
+
+	bool bIsDir = false;
+	int ResourceSize = 0;
+	std::string ResourceName;
+	ElfResource* Parent = nullptr;
+	std::vector<ElfResource*> Resources;
+};
+
+int SumLargeDirectories( const ElfResource* Root, int Threshold )
+{
+	int Sum = 0;
+	if ( Root->bIsDir )
+	{
+		if ( Root->ResourceSize <= Threshold )
+		{
+			Sum += Root->ResourceSize;
+		}
+
+		for ( const ElfResource* Resource : Root->Resources )
+		{
+			Sum += SumLargeDirectories( Resource, Threshold );
+		}
+	}
+	return Sum;
+}
+
+int FindClosestDirectories( const ElfResource* Root, int Threshold )
+{
+	int Closest = INT_MAX;
+	if ( Root->bIsDir )
+	{
+		if ( Root->ResourceSize > Threshold )
+		{
+			Closest = Root->ResourceSize;
+		}
+
+		for ( const ElfResource* Resource : Root->Resources )
+		{
+			Closest = std::min( FindClosestDirectories( Resource, Threshold ), Closest );
+		}
+	}
+	return Closest;
+}
+
 int Day7Part1( const std::string& Filename )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
-	int Answer = 0;
+	std::string DirLiteral = "dir";
+	std::string RootName = "/";
+	ElfResource* RootResource = new ElfResource( DirLiteral, RootName );
+	ElfResource* CurrResource = RootResource;
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+
+		bool bIsCommand;
+		std::string First, Second;
+		ReadDay7Line( Line, bIsCommand, First, Second );
+
+		if ( bIsCommand )
+		{
+			if ( First == "cd" )
+			{
+				if ( Second == "/" )
+				{
+					// Nav to root
+					CurrResource = RootResource;
+				}
+				else if ( Second == ".." )
+				{
+					CurrResource = CurrResource->Parent;
+				}
+				else
+				{
+					// Nav to second
+					for ( ElfResource* Curr : CurrResource->Resources )
+					{
+						if ( Curr && Curr->ResourceName == Second )
+						{
+							CurrResource = Curr;
+							break;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			ElfResource* NewResource = new ElfResource( First, Second );
+			CurrResource->Resources.push_back( NewResource );
+			NewResource->Parent = CurrResource;
+		}
+	}
+
+	RootResource->CalcSize();
+	int Output = SumLargeDirectories( RootResource, 100000 );
+
+	delete RootResource;
+	RootResource = nullptr;
+	CurrResource = nullptr;
+
+	myfile.close();
+
+	return Output;
+}
+
+int Day7Part2( const std::string& Filename )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	std::string DirLiteral = "dir";
+	std::string RootName = "/";
+	ElfResource* RootResource = new ElfResource( DirLiteral, RootName );
+	ElfResource* CurrResource = RootResource;
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+
+		bool bIsCommand;
+		std::string First, Second;
+		ReadDay7Line( Line, bIsCommand, First, Second );
+
+		if ( bIsCommand )
+		{
+			if ( First == "cd" )
+			{
+				if ( Second == "/" )
+				{
+					// Nav to root
+					CurrResource = RootResource;
+				}
+				else if ( Second == ".." )
+				{
+					CurrResource = CurrResource->Parent;
+				}
+				else
+				{
+					// Nav to second
+					for ( ElfResource* Curr : CurrResource->Resources )
+					{
+						if ( Curr && Curr->ResourceName == Second )
+						{
+							CurrResource = Curr;
+							break;
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			ElfResource* NewResource = new ElfResource( First, Second );
+			CurrResource->Resources.push_back( NewResource );
+			NewResource->Parent = CurrResource;
+		}
+	}
+
+	RootResource->CalcSize();
+	int SpaceAvailable = 70000000 - RootResource->ResourceSize;
+	int Output = FindClosestDirectories( RootResource, 30000000 - SpaceAvailable );
+
+	delete RootResource;
+	RootResource = nullptr;
+	CurrResource = nullptr;
+
+	myfile.close();
+
+	return Output;
+}
+
+int Day8Part1( const std::string& Filename )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
 	while ( myfile.good() )
 	{
 		char line[4096];
@@ -512,12 +749,11 @@ int Day7Part1( const std::string& Filename )
 	return 0;
 }
 
-int Day7Part2( const std::string& Filename )
+int Day8Part2( const std::string& Filename )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
-	int Answer = 0;
 	while ( myfile.good() )
 	{
 		char line[4096];
@@ -677,9 +913,8 @@ int main()
 	std::cout << "Day6Part1: " << Day6Part1( Day6Input ) << std::endl;
 	std::cout << "Day6Part2Sample: " << Day6Part2( Day6Sample ) << std::endl;
 	std::cout << "Day6Part2: " << Day6Part2( Day6Input ) << std::endl;
-	//*/
 
-	//*
+
 	std::string Day7Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day7Sample.txt" );
 	std::string Day7Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day7Input.txt" );
 	std::cout << "Day7Part1Sample: " << Day7Part1( Day7Sample ) << std::endl;
@@ -687,6 +922,13 @@ int main()
 	std::cout << "Day7Part2Sample: " << Day7Part2( Day7Sample ) << std::endl;
 	std::cout << "Day7Part2: " << Day7Part2( Day7Input ) << std::endl;
 	//*/
+
+	std::string Day8Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day8Sample.txt" );
+	std::string Day8Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day8Input.txt" );
+	std::cout << "Day8Part1Sample: " << Day8Part1( Day8Sample ) << std::endl;
+	std::cout << "Day8Part1: " << Day8Part1( Day8Input ) << std::endl;
+	std::cout << "Day8Part2Sample: " << Day8Part2( Day8Sample ) << std::endl;
+	std::cout << "Day8Part2: " << Day8Part2( Day8Input ) << std::endl;
 
 	std::cin.get();
 
