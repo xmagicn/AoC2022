@@ -89,14 +89,137 @@ int Year22Day1Part2( const std::string& Filename )
 	return TopFour[1] + TopFour[2] + TopFour[3];
 }
 
+struct RPSMatch
+{
+	enum class RPSVal
+	{
+		Rock = 1,
+		Paper = 2,
+		Scissors = 3,
+	};
+
+	void SetOpponent( char Val )
+	{
+		if ( Val == 'A' )
+			Opponent = RPSVal::Rock;
+		else if ( Val == 'B' )
+			Opponent = RPSVal::Paper;
+		else if ( Val == 'C' )
+			Opponent = RPSVal::Scissors;
+	}
+
+	void SetSelf( char Val )
+	{
+		if ( Val == 'X' )
+			Self = RPSVal::Rock;
+		else if ( Val == 'Y' )
+			Self = RPSVal::Paper;
+		else if ( Val == 'Z' )
+			Self = RPSVal::Scissors;
+	}
+
+	int GetSelfResult() const
+	{
+		int Output = static_cast< int >( Self );
+
+		if ( Opponent == Self )
+		{
+			Output += 3;
+		}
+		else if ( Opponent == RPSVal::Rock && Self == RPSVal::Paper
+			|| Opponent == RPSVal::Paper && Self == RPSVal::Scissors
+			|| Opponent == RPSVal::Scissors && Self == RPSVal::Rock )
+		{
+			Output += 6;
+		}
+
+		return Output;
+	}
+
+	void ForceResult()
+	{
+		// X = lose
+		if ( ForcedResult == 'X' )
+		{
+			if ( Opponent == RPSVal::Rock )
+				Self = RPSVal::Scissors;
+			else if ( Opponent == RPSVal::Paper )
+				Self = RPSVal::Rock;
+			else if ( Opponent == RPSVal::Scissors )
+				Self = RPSVal::Paper;
+		}
+
+		// Y = draw
+		else if ( ForcedResult == 'Y' )
+		{
+			Self = Opponent;
+		}
+
+		// Z = win
+		else if ( ForcedResult == 'Z' )
+		{
+			if ( Opponent == RPSVal::Rock )
+				Self = RPSVal::Paper;
+			else if ( Opponent == RPSVal::Paper )
+				Self = RPSVal::Scissors;
+			else if ( Opponent == RPSVal::Scissors )
+				Self = RPSVal::Rock;
+		}
+	}
+
+	char ForcedResult;
+	RPSVal Opponent;
+	RPSVal Self;
+};
+
+void ReadDay2Input( const std::string& Filename, std::vector<RPSMatch>& Matches )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[256];
+		myfile.getline( line, 256 );
+		std::string Line( line );
+
+		RPSMatch NewMatch;
+		NewMatch.SetOpponent( Line[0] );
+		NewMatch.SetSelf( Line[Line.size() - 1] );
+		NewMatch.ForcedResult = Line[Line.size() - 1];
+		Matches.push_back( NewMatch );
+	}
+
+	myfile.close();
+}
+
 int Day2Part1( const std::string& Filename )
 {
-	return 0;
+	std::vector<RPSMatch> Matches;
+	ReadDay2Input( Filename, Matches );
+
+	int Score = 0;
+	for ( const RPSMatch& Match : Matches )
+	{
+		Score += Match.GetSelfResult();
+	}
+
+	return Score;
 }
 
 int Day2Part2( const std::string& Filename )
 {
-	return 0;
+	std::vector<RPSMatch> Matches;
+	ReadDay2Input( Filename, Matches );
+
+	int Score = 0;
+	for ( RPSMatch& Match : Matches )
+	{
+		Match.ForceResult();
+		Score += Match.GetSelfResult();
+	}
+
+	return Score;
 }
 
 int Day3Part1( const std::string& Filename )
@@ -352,7 +475,7 @@ std::string Day5Part1( const std::string& Filename, int NumDockLines, const Load
 		int Src, Dst, Ct;
 		ReadDay5Line( Line, Src, Dst, Ct );
 
-		for ( size_t Idx = 0; Idx < Ct; ++Idx )
+		for ( int Idx = 0; Idx < Ct; ++Idx )
 		{
 			char Item = MutDock.Stacks[Src].top();
 			MutDock.Stacks[Src].pop();
@@ -388,7 +511,7 @@ std::string Day5Part2( const std::string& Filename, int NumDockLines, const Load
 		ReadDay5Line( Line, Src, Dst, Ct );
 
 		std::stack<char> Crane;
-		for ( size_t Idx = 0; Idx < Ct; ++Idx )
+		for ( int Idx = 0; Idx < Ct; ++Idx )
 		{
 			Crane.push( MutDock.Stacks[Src].top() );
 			MutDock.Stacks[Src].pop();
@@ -447,7 +570,7 @@ int Day6Part1( const std::string& Filename )
 			continue;
 		}
 
-		for ( int Idx = 4; Idx < Line.size(); ++Idx )
+		for ( size_t Idx = 4; Idx < Line.size(); ++Idx )
 		{
 			if ( AreCharactersUnique( Line.substr( Idx - 4, 4 ) ) )
 			{
@@ -479,7 +602,7 @@ int Day6Part2( const std::string& Filename )
 			continue;
 		}
 
-		for ( int Idx = 14; Idx <= Line.size(); ++Idx )
+		for ( size_t Idx = 14; Idx <= Line.size(); ++Idx )
 		{
 			if ( AreCharactersUnique( Line.substr( Idx - 14, 14 ) ) )
 			{
