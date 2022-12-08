@@ -732,7 +732,202 @@ int Day7Part2( const std::string& Filename )
 	return Output;
 }
 
+struct Forest
+{
+	std::vector<std::vector<int>> TreeGrid;
+
+	void Print() const
+	{
+		for ( const std::vector<int>& Row : TreeGrid )
+		{
+			for ( int Tree : Row )
+			{
+				std::cout << Tree << " ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
+	bool IsTreeVisible( int Row, int Col ) const
+	{
+		int TreeHeight = TreeGrid[Row][Col];
+		int GridSize = TreeGrid.size();
+
+		bool LeftVisible = true;
+		for ( int RowLeft = 0; RowLeft < Row; ++RowLeft )
+		{
+			if ( TreeGrid[RowLeft][Col] >= TreeHeight )
+			{
+				LeftVisible = false;
+				break;
+			}
+		}
+
+		bool RightVisible = true;
+		for ( int RowRight = Row + 1; RowRight < GridSize; ++RowRight )
+		{
+			if ( TreeGrid[RowRight][Col] >= TreeHeight )
+			{
+				RightVisible = false;
+				break;
+			}
+		}
+
+		bool UpVisible = true;
+		for ( int ColUp = 0; ColUp < Col; ++ColUp )
+		{
+			if ( TreeGrid[Row][ColUp] >= TreeHeight )
+			{
+				UpVisible = false;
+				break;
+			}
+		}
+
+		bool DownVisible = true;
+		for ( int ColDown = Col + 1; ColDown < GridSize; ++ColDown )
+		{
+			if ( TreeGrid[Row][ColDown] >= TreeHeight )
+			{
+				DownVisible = false;
+				break;
+			}
+		}
+
+		// We could stop after finding a true one of these, but who knows, maybe we'll need this for part 2
+		return LeftVisible || RightVisible || UpVisible || DownVisible;
+	}
+
+	// Brute force babyyyyy
+	int GetVisibleTreeCount() const
+	{
+		int GridSize = TreeGrid.size();
+
+		// Don't need to check edges, just account for them up front
+		int TreeCt = GridSize * 4 - 4;
+
+		for ( int Row = 1; Row < GridSize - 1; ++Row )
+		{
+			for ( int Col = 1; Col < GridSize - 1; ++Col )
+			{
+				if ( IsTreeVisible( Row, Col ) )
+				{
+					++TreeCt;
+				}
+			}
+		}
+
+		return TreeCt;
+	}
+
+	int GetScenicScore( int Row, int Col ) const
+	{
+		int GridSize = TreeGrid.size();
+		int TreeHeight = TreeGrid[Row][Col];
+
+		int LeftScore = 0;
+		for ( int RowLeft = Row - 1; RowLeft >= 0; --RowLeft )
+		{
+			++LeftScore;
+			if ( TreeGrid[RowLeft][Col] >= TreeHeight )
+			{
+				break;
+			}
+		}
+
+		int RightScore = 0;
+		for ( int RowRight = Row + 1; RowRight < GridSize; ++RowRight )
+		{
+			++RightScore;
+			if ( TreeGrid[RowRight][Col] >= TreeHeight )
+			{
+				break;
+			}
+		}
+
+		int UpScore = 0;
+		for ( int ColUp = Col - 1; ColUp >= 0; --ColUp )
+		{
+			++UpScore;
+			if ( TreeGrid[Row][ColUp] >= TreeHeight )
+			{
+				break;
+			}
+		}
+
+		int DownScore = 0;
+		for ( int ColDown = Col + 1; ColDown < GridSize; ++ColDown )
+		{
+			++DownScore;
+			if ( TreeGrid[Row][ColDown] >= TreeHeight )
+			{
+				break;
+			}
+		}
+
+		return LeftScore * RightScore * UpScore * DownScore;
+	}
+
+	int GetBestScenicScore() const
+	{
+		int GridSize = TreeGrid.size();
+
+		int BestScore = 0;
+
+		for ( int Row = 1; Row < GridSize - 1; ++Row )
+		{
+			for ( int Col = 1; Col < GridSize - 1; ++Col )
+			{
+				BestScore = std::max( BestScore, GetScenicScore( Row, Col ) );
+			}
+		}
+
+		return BestScore;
+	}
+};
+
+void ReadDay8Input( const std::string& Filename, Forest& OutForest )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+
+		// I don't have to make these ints, chars would work just as well, but what are you gonna do, sue me?
+		std::vector<int> NewRow;
+		for ( char Entry : Line )
+		{
+			// support for 0 - 9 ONLY
+			NewRow.push_back( Entry - '0' );
+		}
+		OutForest.TreeGrid.push_back( NewRow );
+	}
+
+	myfile.close();
+}
+
 int Day8Part1( const std::string& Filename )
+{
+	Forest SampleForest;
+	ReadDay8Input( Filename, SampleForest );
+	//SampleForest.Print();
+
+	return SampleForest.GetVisibleTreeCount();
+}
+
+int Day8Part2( const std::string& Filename )
+{
+	Forest SampleForest;
+	ReadDay8Input( Filename, SampleForest );
+
+	return SampleForest.GetBestScenicScore();
+}
+
+int Day9Part1( const std::string& Filename )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
@@ -749,7 +944,7 @@ int Day8Part1( const std::string& Filename )
 	return 0;
 }
 
-int Day8Part2( const std::string& Filename )
+int Day9Part2( const std::string& Filename )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
@@ -769,8 +964,8 @@ int Day8Part2( const std::string& Filename )
 int main()
 {
 	/*
-	std::string Day1Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day1Sample.txt" );
-	std::string Day1Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day1Input.txt" );
+	std::string Day1Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Sample.txt" );
+	std::string Day1Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Input.txt" );
 	std::cout << "Day1Part1Sample: " << Year22Day1Part1( Day1Sample ) << std::endl;
 	std::cout << "Day1Part1: " << Year22Day1Part1( Day1Input ) << std::endl
 	std::cout << "Day1Part2Sample: " << Year22Day1Part2( Day1Sample ) << std::endl;
@@ -778,8 +973,8 @@ int main()
 
 
 
-	std::string Day2Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day1Sample.txt" );
-	std::string Day2Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day1Input.txt" );
+	std::string Day2Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Sample.txt" );
+	std::string Day2Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Input.txt" );
 	std::cout << "Day2Part1Sample: " << Day2Part1( Day2Sample ) << std::endl;
 	std::cout << "Day2Part1: " << Day2Part1( Day2Input ) << std::endl;
 	std::cout << "Day2Part2Sample: " << Day2Part2( Day2Sample ) << std::endl;
@@ -787,8 +982,8 @@ int main()
 
 
 
-	std::string Day3Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day3Sample.txt" );
-	std::string Day3Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day3Input.txt" );
+	std::string Day3Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day3Sample.txt" );
+	std::string Day3Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day3Input.txt" );
 	std::cout << "Day3Part1Sample: " << Day3Part1( Day3Sample ) << std::endl;
 	std::cout << "Day3Part1: " << Day3Part1( Day3Input ) << std::endl;
 	std::cout << "Day3Part2Sample: " << Day3Part2( Day3Sample ) << std::endl;
@@ -796,8 +991,8 @@ int main()
 
 
 
-	std::string Day4Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day4Sample.txt" );
-	std::string Day4Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day4Input.txt" );
+	std::string Day4Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day4Sample.txt" );
+	std::string Day4Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day4Input.txt" );
 	std::cout << "Day4Part1Sample: " << Day4Part1( Day4Sample ) << std::endl;
 	std::cout << "Day4Part1: " << Day4Part1( Day4Input ) << std::endl;
 	std::cout << "Day4Part2Sample: " << Day4Part2( Day4Sample ) << std::endl;
@@ -898,8 +1093,8 @@ int main()
 		InputStacks.Stacks.push_back( Stack8 );
 	}
 
-	std::string Day5Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day5Sample.txt" );
-	std::string Day5Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day5Input.txt" );
+	std::string Day5Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day5Sample.txt" );
+	std::string Day5Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day5Input.txt" );
 	std::cout << "Day5Part1Sample: " << Day5Part1( Day5Sample, 5, SampleStacks ) << std::endl;
 	std::cout << "Day5Part1: " << Day5Part1( Day5Input, 10, InputStacks ) << std::endl;
 	std::cout << "Day5Part2Sample: " << Day5Part2( Day5Sample, 5, SampleStacks ) << std::endl;
@@ -907,28 +1102,35 @@ int main()
 
 
 
-	std::string Day6Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day6Sample.txt" );
-	std::string Day6Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day6Input.txt" );
+	std::string Day6Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day6Sample.txt" );
+	std::string Day6Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day6Input.txt" );
 	std::cout << "Day6Part1Sample: " << Day6Part1( Day6Sample ) << std::endl;
 	std::cout << "Day6Part1: " << Day6Part1( Day6Input ) << std::endl;
 	std::cout << "Day6Part2Sample: " << Day6Part2( Day6Sample ) << std::endl;
 	std::cout << "Day6Part2: " << Day6Part2( Day6Input ) << std::endl;
 
 
-	std::string Day7Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day7Sample.txt" );
-	std::string Day7Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day7Input.txt" );
+	std::string Day7Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day7Sample.txt" );
+	std::string Day7Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day7Input.txt" );
 	std::cout << "Day7Part1Sample: " << Day7Part1( Day7Sample ) << std::endl;
 	std::cout << "Day7Part1: " << Day7Part1( Day7Input ) << std::endl;
 	std::cout << "Day7Part2Sample: " << Day7Part2( Day7Sample ) << std::endl;
 	std::cout << "Day7Part2: " << Day7Part2( Day7Input ) << std::endl;
-	//*/
 
-	std::string Day8Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day8Sample.txt" );
-	std::string Day8Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\2022\\Day8Input.txt" );
+	std::string Day8Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Sample.txt" );
+	std::string Day8Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Input.txt" );
 	std::cout << "Day8Part1Sample: " << Day8Part1( Day8Sample ) << std::endl;
 	std::cout << "Day8Part1: " << Day8Part1( Day8Input ) << std::endl;
 	std::cout << "Day8Part2Sample: " << Day8Part2( Day8Sample ) << std::endl;
 	std::cout << "Day8Part2: " << Day8Part2( Day8Input ) << std::endl;
+	//*/
+
+	std::string Day9Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Sample.txt" );
+	std::string Day9Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Input.txt" );
+	std::cout << "Day9Part1Sample: " << Day9Part1( Day9Sample ) << std::endl;
+	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
+	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample ) << std::endl;
+	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
 
 	std::cin.get();
 
