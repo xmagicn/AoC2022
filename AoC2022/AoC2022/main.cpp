@@ -6,6 +6,11 @@
 #include <queue>
 #include <unordered_map>
 #include <stack>
+#include <set>
+#include <algorithm>
+
+// Unused Param
+#pragma warning( disable : 4100 )
 
 int Year22Day1Part1( const std::string& Filename )
 {
@@ -164,7 +169,7 @@ struct RPSMatch
 				Self = RPSVal::Scissors;
 			else if ( Opponent == RPSVal::Scissors )
 				Self = RPSVal::Rock;
-		}
+		} 
 	}
 
 	char ForcedResult;
@@ -1050,7 +1055,288 @@ int Day8Part2( const std::string& Filename )
 	return SampleForest.GetBestScenicScore();
 }
 
-int Day9Part1( const std::string& Filename )
+struct IntVector2D
+{
+	IntVector2D( int InX = 0, int InY = 0 ) : X( InX ), Y( InY ) {}
+
+	bool operator==( const IntVector2D& Other ) const { return X == Other.X && Y == Other.Y; }
+	IntVector2D operator+( const IntVector2D& Other ) const { return IntVector2D( X + Other.X, Y + Other.Y ); }
+	IntVector2D operator-( const IntVector2D& Other ) const { return IntVector2D( X - Other.X, Y - Other.Y ); }
+	IntVector2D operator*( const IntVector2D& Other ) const { return IntVector2D( X * Other.X, Y * Other.Y ); }
+	IntVector2D operator*( int Scale ) const { return IntVector2D( X * Scale, Y * Scale ); }
+	IntVector2D operator/( const IntVector2D& Other ) const { return IntVector2D( Other.X ? X / Other.X : 0, Other.Y ? Y / Other.Y : 0 ); }
+	IntVector2D operator/( int Scale ) const { return IntVector2D( Scale ? X / Scale : 0, Scale ? Y / Scale : 0 ); }
+
+	// Ew
+	int Size() const { return (int)std::sqrtf( (float)(X * X + Y * Y )); }
+
+	int X;
+	int Y;
+}; 
+
+// Don't look at this it's not good.
+inline bool operator<( const IntVector2D& lhs, const IntVector2D& rhs )
+{
+	return lhs.X != rhs.X ? lhs.X < rhs.X : lhs.Y < rhs.Y;
+}
+
+IntVector2D ReadDay9Line( const std::string& Line )
+{
+	IntVector2D OutVector;
+
+	int Scale = stoi( Line.substr( 2 ) );
+	char Dir = Line[0];
+	if ( Dir == 'U' )
+		OutVector.Y = Scale;
+	else if ( Dir == 'D' )
+		OutVector.Y = -Scale;
+	else if ( Dir == 'L' )
+		OutVector.X = -Scale;
+	else if ( Dir == 'R' )
+		OutVector.X = Scale;
+	else
+		std::cout << "This has gone bad: " << Line << std::endl;
+
+	return OutVector;
+}
+
+int Day9Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+
+	std::queue<IntVector2D> Instructions;
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+
+		Instructions.push( ReadDay9Line( Line ) );
+	}
+
+	myfile.close();
+
+	std::set<IntVector2D> VisitedLocations;
+	IntVector2D HeadPos;
+	IntVector2D TailPos;
+	while ( Instructions.size() > 0 )
+	{
+		const IntVector2D& Instruction = Instructions.front();
+		Instructions.pop();
+
+		if ( bShouldPrint )
+		{
+			std::cout << "== " << Instruction.X << " " << Instruction.Y << " ==" << std::endl;
+		}
+
+		IntVector2D StepDir = Instruction / Instruction.Size();
+		for ( int Ct = 0; Ct < Instruction.Size(); ++Ct )
+		{
+			HeadPos = HeadPos + StepDir;
+
+			IntVector2D Dir = HeadPos - TailPos;
+			bool bIsXTouching = std::abs( HeadPos.X - TailPos.X ) <= 1;
+			bool bIsYTouching = std::abs( HeadPos.Y - TailPos.Y ) <= 1;
+
+			if ( HeadPos.X == TailPos.X && !bIsYTouching )
+			{
+				TailPos.Y += Dir.Y / std::abs(Dir.Y);
+			}
+			else if ( HeadPos.Y == TailPos.Y && !bIsXTouching )
+			{
+				TailPos.X += Dir.X / std::abs(Dir.X);
+			}
+			else if ( !bIsYTouching || !bIsXTouching )
+			{
+				TailPos.X += Dir.X ? Dir.X / std::abs( Dir.X ) : 0;
+				TailPos.Y += Dir.Y ? Dir.Y / std::abs( Dir.Y ) : 0;
+			}
+			/*
+			else
+			{
+				if ( !bIsXTouching )
+					TailPos.X += Dir.X / Dir.X;
+				if ( !bIsYTouching )
+					TailPos.Y += Dir.Y / Dir.Y;
+			}
+			//*/
+
+			VisitedLocations.insert( TailPos );
+
+			if ( bShouldPrint )
+			{
+				for ( int Row = 4; Row >= 0; --Row )
+				{
+					for ( int Col = 0; Col < 6; ++Col )
+					{
+						IntVector2D Curr( Col, Row );
+						char Selected = '.';
+						if ( VisitedLocations.count( IntVector2D( Col, Row ) ) )
+						{
+							Selected = '#';
+						}
+
+						if ( Curr == TailPos )
+						{
+							Selected = 'T';
+						}
+
+						if ( Curr == HeadPos )
+						{
+							Selected = 'H';
+						}
+
+						std::cout << Selected;
+					}
+
+					std::cout << std::endl;
+				}
+
+				std::cout << std::endl;
+			}
+			}
+
+		/*
+
+		HeadPos = HeadPos + Instruction;
+
+		IntVector2D Dir = HeadPos - TailPos;
+		if ( Dir.X != 0 )
+		{
+			float Num = ( float )(std::abs( Dir.X ) - 1);
+			float Denom = ( float )Dir.X;
+			Dir.X = int( (float)Dir.X * Num / Denom );
+		}
+		if ( Dir.Y != 0 )
+		{
+			float Num = ( float )( std::abs( Dir.Y ) - 1 );
+			float Denom = ( float )Dir.Y;
+			Dir.Y = int( ( float )Dir.Y * Num / Denom );
+		}
+		//TailPos.X = std::min( std::max(TailPos.X, -1), 1 );
+		//TailPos.Y = std::min( std::max(TailPos.Y, -1), 1 );
+
+		TailPos = TailPos + Dir;
+		//*/
+	}
+
+	return VisitedLocations.size();
+}
+
+void UpdateRopeSection( const IntVector2D& HeadPos, IntVector2D& TailPos )
+{
+	IntVector2D Dir = HeadPos - TailPos;
+	bool bIsXTouching = std::abs( HeadPos.X - TailPos.X ) <= 1;
+	bool bIsYTouching = std::abs( HeadPos.Y - TailPos.Y ) <= 1;
+
+	if ( HeadPos.X == TailPos.X && !bIsYTouching )
+	{
+		TailPos.Y += Dir.Y / std::abs( Dir.Y );
+	}
+	else if ( HeadPos.Y == TailPos.Y && !bIsXTouching )
+	{
+		TailPos.X += Dir.X / std::abs( Dir.X );
+	}
+	else if ( !bIsYTouching || !bIsXTouching )
+	{
+		TailPos.X += Dir.X ? Dir.X / std::abs( Dir.X ) : 0;
+		TailPos.Y += Dir.Y ? Dir.Y / std::abs( Dir.Y ) : 0;
+	}
+}
+
+int Day9Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+
+	std::queue<IntVector2D> Instructions;
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+
+		Instructions.push( ReadDay9Line( Line ) );
+	}
+
+	myfile.close();
+
+	std::set<IntVector2D> VisitedLocations;
+	std::vector<IntVector2D> KnotList(10, IntVector2D());
+
+	while ( Instructions.size() > 0 )
+	{
+		const IntVector2D& Instruction = Instructions.front();
+		Instructions.pop();
+
+		if ( bShouldPrint )
+		{
+			std::cout << "== " << Instruction.X << " " << Instruction.Y << " ==" << std::endl;
+		}
+
+		IntVector2D StepDir = Instruction / Instruction.Size();
+		for ( int Ct = 0; Ct < Instruction.Size(); ++Ct )
+		{
+
+			KnotList[0] = KnotList[0] + StepDir;
+
+			for ( size_t Idx = 1; Idx < KnotList.size(); ++Idx )
+			{
+				UpdateRopeSection( KnotList[Idx - 1], KnotList[Idx] );
+			}
+
+			VisitedLocations.insert( KnotList[KnotList.size() - 1] );
+
+			if ( bShouldPrint )
+			{
+				for ( int Row = 4; Row >= 0; --Row )
+				{
+					for ( int Col = 0; Col < 6; ++Col )
+					{
+						IntVector2D Curr( Col, Row );
+						char Selected = '.';
+						if ( VisitedLocations.count( IntVector2D( Col, Row ) ) )
+						{
+							Selected = '#';
+						}
+
+						for ( int Idx = KnotList.size() - 1; Idx >= 0; --Idx )
+						{
+
+							if ( Curr == KnotList[Idx] )
+							{
+								Selected = '0' + (char)Idx;
+
+								if ( Idx == (int)KnotList.size() - 1 )
+								{
+									Selected = 'T';
+								}
+
+								if ( Idx == 0 )
+								{
+									Selected = 'H';
+								}
+							}
+						}
+
+						std::cout << Selected;
+					}
+
+					std::cout << std::endl;
+				}
+
+				std::cout << std::endl;
+			}
+		}
+	}
+
+	return VisitedLocations.size();
+}
+
+int Day10Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
@@ -1060,6 +1346,7 @@ int Day9Part1( const std::string& Filename )
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
 	}
 
 	myfile.close();
@@ -1067,7 +1354,7 @@ int Day9Part1( const std::string& Filename )
 	return 0;
 }
 
-int Day9Part2( const std::string& Filename )
+int Day10Part2( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
@@ -1077,6 +1364,7 @@ int Day9Part2( const std::string& Filename )
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
 	}
 
 	myfile.close();
@@ -1246,14 +1534,21 @@ int main()
 	std::cout << "Day8Part1: " << Day8Part1( Day8Input ) << std::endl;
 	std::cout << "Day8Part2Sample: " << Day8Part2( Day8Sample ) << std::endl;
 	std::cout << "Day8Part2: " << Day8Part2( Day8Input ) << std::endl;
+
+	std::string Day9Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day9Sample.txt" );
+	std::string Day9Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day9Input.txt" );
+	std::cout << "Day9Part1Sample: " << Day9Part1( Day9Sample, true ) << std::endl;
+	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
+	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample, true ) << std::endl;
+	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
 	//*/
 
-	std::string Day9Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Sample.txt" );
-	std::string Day9Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Input.txt" );
-	std::cout << "Day9Part1Sample: " << Day9Part1( Day9Sample ) << std::endl;
-	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
-	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample ) << std::endl;
-	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
+	std::string Day10Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Sample.txt" );
+	std::string Day10Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Input.txt" );
+	std::cout << "Day10Part1Sample: " << Day10Part1( Day10Sample ) << std::endl;
+	std::cout << "Day10Part1: " << Day10Part1( Day10Input ) << std::endl;
+	std::cout << "Day10Part2Sample: " << Day10Part2( Day10Sample ) << std::endl;
+	std::cout << "Day10Part2: " << Day10Part2( Day10Input ) << std::endl;
 
 	std::cin.get();
 
