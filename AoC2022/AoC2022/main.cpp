@@ -1417,8 +1417,6 @@ int Day10Part1( const std::string& Filename, bool bShouldPrint = false )
 	std::ifstream myfile;
 	myfile.open( Filename );
 
-	Day10CPU CPU;
-
 	std::vector<std::string> InstructionStack;
 
 	while ( myfile.good() )
@@ -1449,8 +1447,6 @@ int Day10Part2( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
-
-	Day10CPU CPU;
 
 	std::vector<std::string> InstructionStack;
 
@@ -1485,6 +1481,40 @@ int Day10Part2( const std::string& Filename, bool bShouldPrint = false )
 
 		std::cout << std::endl;
 	}
+
+	return 0;
+}
+
+int Day11Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
+int Day11Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
 
 	return 0;
 }
@@ -1658,7 +1688,6 @@ int main()
 	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
 	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample, true ) << std::endl;
 	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
-	//*/
 
 	std::string Day10Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Sample.txt" );
 	std::string Day10Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Input.txt" );
@@ -1666,6 +1695,14 @@ int main()
 	std::cout << "Day10Part1: " << Day10Part1( Day10Input ) << std::endl;
 	std::cout << "Day10Part2Sample: " << Day10Part2( Day10Sample ) << std::endl;
 	std::cout << "Day10Part2: " << Day10Part2( Day10Input ) << std::endl;
+	//*/
+
+	std::string Day11Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day11Sample.txt" );
+	std::string Day11Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day11Input.txt" );
+	std::cout << "Day11Part1Sample: " << Day11Part1( Day11Sample ) << std::endl;
+	std::cout << "Day11Part1: " << Day11Part1( Day11Input ) << std::endl;
+	std::cout << "Day11Part2Sample: " << Day11Part2( Day11Sample ) << std::endl;
+	std::cout << "Day11Part2: " << Day11Part2( Day11Input ) << std::endl;
 
 	std::cin.get();
 
