@@ -1688,7 +1688,6 @@ int main()
 	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
 	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample, true ) << std::endl;
 	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
-	//*/
 
 	std::string Day10Sample( "..\\..\\Day10Sample.txt" );
 	std::string Day10Input( "..\\..\\Day10Input.txt" );
@@ -1696,6 +1695,7 @@ int main()
 	std::cout << "Day10Part1: " << Day10Part1( Day10Input ) << std::endl;
 	std::cout << "Day10Part2Sample: " << Day10Part2( Day10Sample ) << std::endl;
 	std::cout << "Day10Part2: " << Day10Part2( Day10Input ) << std::endl;
+	//*/
 
 	std::string Day11Sample( "..\\..\\Day11Sample.txt" );
 	std::string Day11Input( "..\\..\\Day11Input.txt" );
