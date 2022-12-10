@@ -1336,10 +1336,90 @@ int Day9Part2( const std::string& Filename, bool bShouldPrint = false )
 	return VisitedLocations.size();
 }
 
+struct Day10CPU
+{
+	void ExecuteInstruction( const std::string& Instruction )
+	{
+		auto SplitIdx = Instruction.find( ' ' );
+		if ( SplitIdx != std::string::npos )
+		{
+			std::string SplitInstruction = Instruction.substr( 0, SplitIdx );
+			if ( SplitInstruction == "addx" )
+			{
+				int XVal = stoi( Instruction.substr( SplitIdx + 1 ) );
+				XRegister += XVal;
+				ClockCount += 2;
+			}
+		}
+		else
+		{
+			if ( Instruction == "noop" )
+			{
+				++ClockCount;
+			}
+		}
+	}
+
+	int ClockCount = 0;
+	int XRegister = 1;
+};
+
+int GetXRegisterAtTick( const std::vector<std::string>& Instructions, int ClockValue )
+{
+	Day10CPU Cpu;
+	int PrevXVal = 0;
+	int OutVal = 0;
+	for ( const std::string& Instruction : Instructions )
+	{
+		Cpu.ExecuteInstruction( Instruction );
+		if ( Cpu.ClockCount > ClockValue )
+		{
+			OutVal = PrevXVal;
+			break;
+		}
+		else if ( Cpu.ClockCount == ClockValue )
+		{
+			OutVal = Cpu.XRegister;
+			break;
+		}
+		else
+		{
+			PrevXVal = Cpu.XRegister;
+		}
+	}
+
+	return OutVal;
+}
+
+int CalculateFrequency( const std::vector<std::string>& Instructions, int ClockValue )
+{
+	Day10CPU Cpu;
+	int PrevXVal = 0;
+	int OutVal = 0;
+	for ( const std::string& Instruction : Instructions )
+	{
+		Cpu.ExecuteInstruction( Instruction );
+		if ( Cpu.ClockCount >= ClockValue )
+		{
+			OutVal = PrevXVal;
+			break;
+		}
+		{
+			PrevXVal = Cpu.XRegister;
+		}
+	}
+
+	return OutVal * ClockValue;
+}
+
 int Day10Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
+
+	Day10CPU CPU;
+
+	std::vector<std::string> InstructionStack;
 
 	while ( myfile.good() )
 	{
@@ -1347,11 +1427,22 @@ int Day10Part1( const std::string& Filename, bool bShouldPrint = false )
 		myfile.getline( line, 4096 );
 		std::string Line( line );
 
+		InstructionStack.push_back( Line );
 	}
 
 	myfile.close();
 
-	return 0;
+	int FrequencySum = 0;
+
+	//20th, 60th, 100th, 140th, 180th, and 220th
+	FrequencySum += CalculateFrequency( InstructionStack, 20 );
+	FrequencySum += CalculateFrequency( InstructionStack, 60 );
+	FrequencySum += CalculateFrequency( InstructionStack, 100 );
+	FrequencySum += CalculateFrequency( InstructionStack, 140 );
+	FrequencySum += CalculateFrequency( InstructionStack, 180 );
+	FrequencySum += CalculateFrequency( InstructionStack, 220 );
+
+	return FrequencySum;
 }
 
 int Day10Part2( const std::string& Filename, bool bShouldPrint = false )
@@ -1359,15 +1450,41 @@ int Day10Part2( const std::string& Filename, bool bShouldPrint = false )
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	Day10CPU CPU;
+
+	std::vector<std::string> InstructionStack;
+
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
 
+		InstructionStack.push_back( Line );
 	}
 
 	myfile.close();
+
+	// Could ABSOLUTELY do this better. If I had any incentive to do so, the CPU would store it's instructions and we'd query it every tick. Maybe I'll switch to that, but probably not!
+	int RowCount = 6;
+	int RowLength = 40;
+	for ( int Row = 0; Row < RowCount; ++Row )
+	{
+		for ( int Col = 0; Col < RowLength; ++Col )
+		{
+			int SpriteLoc = GetXRegisterAtTick( InstructionStack, Row * RowLength + Col );
+			if ( std::abs( SpriteLoc - Col ) <= 1 )
+			{
+				std::cout << '#';
+			}
+			else
+			{
+				std::cout << '.';
+			}
+		}
+
+		std::cout << std::endl;
+	}
 
 	return 0;
 }
