@@ -1522,8 +1522,8 @@ int Day11Part2( const std::string& Filename, bool bShouldPrint = false )
 int main()
 {
 	/*
-	std::string Day1Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Sample.txt" );
-	std::string Day1Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Input.txt" );
+	std::string Day1Sample( "..\\..\\Day1Sample.txt" );
+	std::string Day1Input( "..\\..\\Day1Input.txt" );
 	std::cout << "Day1Part1Sample: " << Year22Day1Part1( Day1Sample ) << std::endl;
 	std::cout << "Day1Part1: " << Year22Day1Part1( Day1Input ) << std::endl
 	std::cout << "Day1Part2Sample: " << Year22Day1Part2( Day1Sample ) << std::endl;
@@ -1531,8 +1531,8 @@ int main()
 
 
 
-	std::string Day2Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Sample.txt" );
-	std::string Day2Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day1Input.txt" );
+	std::string Day2Sample( "..\\..\\Day2Sample.txt" );
+	std::string Day2Input( "..\\..\\Day2Input.txt" );
 	std::cout << "Day2Part1Sample: " << Day2Part1( Day2Sample ) << std::endl;
 	std::cout << "Day2Part1: " << Day2Part1( Day2Input ) << std::endl;
 	std::cout << "Day2Part2Sample: " << Day2Part2( Day2Sample ) << std::endl;
@@ -1540,8 +1540,8 @@ int main()
 
 
 
-	std::string Day3Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day3Sample.txt" );
-	std::string Day3Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day3Input.txt" );
+	std::string Day3Sample( "..\\..\\Day3Sample.txt" );
+	std::string Day3Input( "..\\..\\Day3Input.txt" );
 	std::cout << "Day3Part1Sample: " << Day3Part1( Day3Sample ) << std::endl;
 	std::cout << "Day3Part1: " << Day3Part1( Day3Input ) << std::endl;
 	std::cout << "Day3Part2Sample: " << Day3Part2( Day3Sample ) << std::endl;
@@ -1549,8 +1549,8 @@ int main()
 
 
 
-	std::string Day4Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day4Sample.txt" );
-	std::string Day4Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day4Input.txt" );
+	std::string Day4Sample( "..\\..\\Day4Sample.txt" );
+	std::string Day4Input( "..\\..\\Day4Input.txt" );
 	std::cout << "Day4Part1Sample: " << Day4Part1( Day4Sample ) << std::endl;
 	std::cout << "Day4Part1: " << Day4Part1( Day4Input ) << std::endl;
 	std::cout << "Day4Part2Sample: " << Day4Part2( Day4Sample ) << std::endl;
@@ -1651,8 +1651,8 @@ int main()
 		InputStacks.Stacks.push_back( Stack8 );
 	}
 
-	std::string Day5Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day5Sample.txt" );
-	std::string Day5Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day5Input.txt" );
+	std::string Day5Sample( "..\\..\\Day5Sample.txt" );
+	std::string Day5Input( "..\\..\\Day5Input.txt" );
 	std::cout << "Day5Part1Sample: " << Day5Part1( Day5Sample, 5, SampleStacks ) << std::endl;
 	std::cout << "Day5Part1: " << Day5Part1( Day5Input, 10, InputStacks ) << std::endl;
 	std::cout << "Day5Part2Sample: " << Day5Part2( Day5Sample, 5, SampleStacks ) << std::endl;
@@ -1660,45 +1660,45 @@ int main()
 
 
 
-	std::string Day6Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day6Sample.txt" );
-	std::string Day6Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day6Input.txt" );
+	std::string Day6Sample( "..\\..\\Day6Sample.txt" );
+	std::string Day6Input( "..\\..\\Day6Input.txt" );
 	std::cout << "Day6Part1Sample: " << Day6Part1( Day6Sample ) << std::endl;
 	std::cout << "Day6Part1: " << Day6Part1( Day6Input ) << std::endl;
 	std::cout << "Day6Part2Sample: " << Day6Part2( Day6Sample ) << std::endl;
 	std::cout << "Day6Part2: " << Day6Part2( Day6Input ) << std::endl;
 
 
-	std::string Day7Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day7Sample.txt" );
-	std::string Day7Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day7Input.txt" );
+	std::string Day7Sample( "..\\..\\Day7Sample.txt" );
+	std::string Day7Input( "..\\..\\Day7Input.txt" );
 	std::cout << "Day7Part1Sample: " << Day7Part1( Day7Sample ) << std::endl;
 	std::cout << "Day7Part1: " << Day7Part1( Day7Input ) << std::endl;
 	std::cout << "Day7Part2Sample: " << Day7Part2( Day7Sample ) << std::endl;
 	std::cout << "Day7Part2: " << Day7Part2( Day7Input ) << std::endl;
 
-	std::string Day8Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Sample.txt" );
-	std::string Day8Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day8Input.txt" );
+	std::string Day8Sample( "..\\..\\Day8Sample.txt" );
+	std::string Day8Input( "..\\..\\Day8Input.txt" );
 	std::cout << "Day8Part1Sample: " << Day8Part1( Day8Sample ) << std::endl;
 	std::cout << "Day8Part1: " << Day8Part1( Day8Input ) << std::endl;
 	std::cout << "Day8Part2Sample: " << Day8Part2( Day8Sample ) << std::endl;
 	std::cout << "Day8Part2: " << Day8Part2( Day8Input ) << std::endl;
 
-	std::string Day9Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day9Sample.txt" );
-	std::string Day9Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day9Input.txt" );
+	std::string Day9Sample( "..\\..\\Day9Sample.txt" );
+	std::string Day9Input( "..\\..\\Day9Input.txt" );
 	std::cout << "Day9Part1Sample: " << Day9Part1( Day9Sample, true ) << std::endl;
 	std::cout << "Day9Part1: " << Day9Part1( Day9Input ) << std::endl;
 	std::cout << "Day9Part2Sample: " << Day9Part2( Day9Sample, true ) << std::endl;
 	std::cout << "Day9Part2: " << Day9Part2( Day9Input ) << std::endl;
+	//*/
 
-	std::string Day10Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Sample.txt" );
-	std::string Day10Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day10Input.txt" );
+	std::string Day10Sample( "..\\..\\Day10Sample.txt" );
+	std::string Day10Input( "..\\..\\Day10Input.txt" );
 	std::cout << "Day10Part1Sample: " << Day10Part1( Day10Sample ) << std::endl;
 	std::cout << "Day10Part1: " << Day10Part1( Day10Input ) << std::endl;
 	std::cout << "Day10Part2Sample: " << Day10Part2( Day10Sample ) << std::endl;
 	std::cout << "Day10Part2: " << Day10Part2( Day10Input ) << std::endl;
-	//*/
 
-	std::string Day11Sample( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day11Sample.txt" );
-	std::string Day11Input( "C:\\Users\\N8\\Desktop\\AdventOfCode\\AoC2022\\Day11Input.txt" );
+	std::string Day11Sample( "..\\..\\Day11Sample.txt" );
+	std::string Day11Input( "..\\..\\Day11Input.txt" );
 	std::cout << "Day11Part1Sample: " << Day11Part1( Day11Sample ) << std::endl;
 	std::cout << "Day11Part1: " << Day11Part1( Day11Input ) << std::endl;
 	std::cout << "Day11Part2Sample: " << Day11Part2( Day11Sample ) << std::endl;
