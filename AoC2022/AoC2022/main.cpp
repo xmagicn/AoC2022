@@ -1492,7 +1492,6 @@ struct Monkey
 	unsigned long InspectionCount = 0;
 
 	std::function<unsigned long long( unsigned long long )> Operation;
-	std::function<int( unsigned long long )> Test;
 
 	int Divisor;
 	int TrueDest;
@@ -1526,7 +1525,7 @@ struct Monkey
 
 			Item %= MaxVal;
 
-			int DestMonkey = BasicTest(Item);
+			int DestMonkey = Test(Item);
 
 			Monkeys[DestMonkey].HeldItems.push_back( Item );
 		}
@@ -1534,11 +1533,10 @@ struct Monkey
 		HeldItems.clear();
 	}
 
-	int BasicTest( unsigned long long& Old )
+	int Test( unsigned long long& Old )
 	{
 		if ( Old % Divisor == 0 )
 		{
-			//Old /= Divisor;
 			return TrueDest;
 		}
 
@@ -1622,6 +1620,44 @@ unsigned long long Day11Part2( std::vector<Monkey>& InMonkeys, bool bShouldPrint
 	std::sort( InspectCounts.rbegin(), InspectCounts.rend() );
 
 	return InspectCounts[0] * InspectCounts[1];
+}
+
+int Day12Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	std::vector<std::string> InstructionStack;
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
+int Day12Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	std::vector<std::string> InstructionStack;
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
 }
 
 int main()
@@ -1800,12 +1836,10 @@ int main()
 	std::cout << "Day10Part1: " << Day10Part1( Day10Input ) << std::endl;
 	std::cout << "Day10Part2Sample: " << Day10Part2( Day10Sample ) << std::endl;
 	std::cout << "Day10Part2: " << Day10Part2( Day10Input ) << std::endl;
-	//*/
 
 	Monkey SampleMonkey0;
 	SampleMonkey0.HeldItems = { 79, 98 };
 	SampleMonkey0.Operation = []( unsigned long long Old ) { return Old * 19; };
-	SampleMonkey0.Test = []( unsigned long long Old ) { return Old % 23 == 0 ? 2 : 3; };
 	SampleMonkey0.Divisor = 23;
 	SampleMonkey0.TrueDest = 2;
 	SampleMonkey0.FalseDest = 3;
@@ -1813,7 +1847,6 @@ int main()
 	Monkey SampleMonkey1;
 	SampleMonkey1.HeldItems = { 54, 65, 75, 74 };
 	SampleMonkey1.Operation = []( unsigned long long Old ) { return Old + 6; };
-	SampleMonkey1.Test = []( unsigned long long Old ) { return Old % 19 == 0 ? 2 : 0; };
 	SampleMonkey1.Divisor = 19;
 	SampleMonkey1.TrueDest = 2;
 	SampleMonkey1.FalseDest = 0;
@@ -1821,7 +1854,6 @@ int main()
 	Monkey SampleMonkey2;
 	SampleMonkey2.HeldItems = { 79, 60, 97 };
 	SampleMonkey2.Operation = []( unsigned long long Old ) { return Old * Old; };
-	SampleMonkey2.Test = []( unsigned long long Old ) { return Old % 13 == 0 ? 1 : 3; };
 	SampleMonkey2.Divisor = 13;
 	SampleMonkey2.TrueDest = 1;
 	SampleMonkey2.FalseDest = 3;
@@ -1829,7 +1861,6 @@ int main()
 	Monkey SampleMonkey3;
 	SampleMonkey3.HeldItems = { 74 };
 	SampleMonkey3.Operation = []( unsigned long long Old ) { return Old + 3; };
-	SampleMonkey3.Test = []( unsigned long long Old ) { return Old % 17 == 0 ? 0 : 1; };
 	SampleMonkey3.Divisor = 17;
 	SampleMonkey3.TrueDest = 0;
 	SampleMonkey3.FalseDest = 1;
@@ -1840,7 +1871,6 @@ int main()
 	Monkey Monkey0;
 	Monkey0.HeldItems = { 75, 63 };
 	Monkey0.Operation = []( unsigned long long Old ) { return Old * 3; };
-	Monkey0.Test = []( unsigned long long Old ) { return Old % 11 == 0 ? 7 : 2; };
 	Monkey0.Divisor = 11;
 	Monkey0.TrueDest = 7;
 	Monkey0.FalseDest = 2;
@@ -1848,7 +1878,6 @@ int main()
 	Monkey Monkey1;
 	Monkey1.HeldItems = { 65, 79, 98, 77, 56, 54, 83, 94 };
 	Monkey1.Operation = []( unsigned long long Old ) { return Old + 3; };
-	Monkey1.Test = []( unsigned long long Old ) { return Old % 2 == 0 ? 2 : 0; };
 	Monkey1.Divisor = 2;
 	Monkey1.TrueDest = 2;
 	Monkey1.FalseDest = 0;
@@ -1856,7 +1885,6 @@ int main()
 	Monkey Monkey2;
 	Monkey2.HeldItems = { 66 };
 	Monkey2.Operation = []( unsigned long long Old ) { return Old + 5; };
-	Monkey2.Test = []( unsigned long long Old ) { return Old % 5 == 0 ? 7 : 5; };
 	Monkey2.Divisor = 5;
 	Monkey2.TrueDest = 7;
 	Monkey2.FalseDest = 5;
@@ -1864,7 +1892,6 @@ int main()
 	Monkey Monkey3;
 	Monkey3.HeldItems = { 51, 89, 90 };
 	Monkey3.Operation = []( unsigned long long Old ) { return Old * 19; };
-	Monkey3.Test = []( unsigned long long Old ) { return Old % 7 == 0 ? 6 : 4; };
 	Monkey3.Divisor = 7;
 	Monkey3.TrueDest = 6;
 	Monkey3.FalseDest = 4;
@@ -1872,7 +1899,6 @@ int main()
 	Monkey Monkey4;
 	Monkey4.HeldItems = { 75, 94, 66, 90, 77, 82, 61 };
 	Monkey4.Operation = []( unsigned long long Old ) { return Old + 1; };
-	Monkey4.Test = []( unsigned long long Old ) { return Old % 17 == 0 ? 6 : 1; };
 	Monkey4.Divisor = 17;
 	Monkey4.TrueDest = 6;
 	Monkey4.FalseDest = 1;
@@ -1880,7 +1906,6 @@ int main()
 	Monkey Monkey5;
 	Monkey5.HeldItems = { 53, 76, 59, 92, 95 };
 	Monkey5.Operation = []( unsigned long long Old ) { return Old + 2; };
-	Monkey5.Test = []( unsigned long long Old ) { return Old % 19 == 0 ? 4 : 3; };
 	Monkey5.Divisor = 19;
 	Monkey5.TrueDest = 4;
 	Monkey5.FalseDest = 3;
@@ -1888,7 +1913,6 @@ int main()
 	Monkey Monkey6;
 	Monkey6.HeldItems = { 81, 61, 75, 89, 70, 92 };
 	Monkey6.Operation = []( unsigned long long Old ) { return Old * Old; };
-	Monkey6.Test = []( unsigned long long Old ) { return Old % 3 == 0 ? 0 : 1; };
 	Monkey6.Divisor = 3;
 	Monkey6.TrueDest = 0;
 	Monkey6.FalseDest = 1;
@@ -1896,7 +1920,6 @@ int main()
 	Monkey Monkey7;
 	Monkey7.HeldItems = { 81, 86, 62, 87 };
 	Monkey7.Operation = []( unsigned long long Old ) { return Old + 8; };
-	Monkey7.Test = []( unsigned long long Old ) { return Old % 13 == 0 ? 3 : 5; };
 	Monkey7.Divisor = 13;
 	Monkey7.TrueDest = 3;
 	Monkey7.FalseDest = 5;
@@ -1904,12 +1927,18 @@ int main()
 	std::vector<Monkey> Monkeys( { Monkey0, Monkey1, Monkey2, Monkey3, Monkey4, Monkey5, Monkey6, Monkey7 } );
 	std::vector<Monkey> MonkeysPt2( { Monkey0, Monkey1, Monkey2, Monkey3, Monkey4, Monkey5, Monkey6, Monkey7 } );
 
-	std::string Day11Sample( "..\\..\\Day11Sample.txt" );
-	std::string Day11Input( "..\\..\\Day11Input.txt" );
-	std::cout << "Day11Part1Sample: " << Day11Part1( SampleMonkeys, true ) << std::endl;
+	std::cout << "Day11Part1Sample: " << Day11Part1( SampleMonkeys ) << std::endl;
 	std::cout << "Day11Part1: " << Day11Part1( Monkeys ) << std::endl;
-	std::cout << "Day11Part2Sample: " << Day11Part2( SampleMonkeysPt2, true ) << std::endl;
+	std::cout << "Day11Part2Sample: " << Day11Part2( SampleMonkeysPt2 ) << std::endl;
 	std::cout << "Day11Part2: " << Day11Part2( MonkeysPt2 ) << std::endl;
+	//*/
+
+	std::string Day12Sample( "..\\..\\Day12Sample.txt" );
+	std::string Day12Input( "..\\..\\Day12Input.txt" );
+	std::cout << "Day12Part1Sample: " << Day12Part1( Day12Sample ) << std::endl;
+	std::cout << "Day12Part1: " << Day12Part1( Day12Input ) << std::endl;
+	std::cout << "Day12Part2Sample: " << Day12Part2( Day12Sample ) << std::endl;
+	std::cout << "Day12Part2: " << Day12Part2( Day12Input ) << std::endl;
 
 	std::cin.get();
 
