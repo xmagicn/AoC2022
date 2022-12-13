@@ -1733,6 +1733,23 @@ struct Heightmap
 		}
 	}
 
+	void AddValidNeighborsRev( const IntVector2D& InVec, std::queue<IntVector2D>& OutLocs )
+	{
+		std::vector<IntVector2D> Neighbors{ IntVector2D( InVec.X + 1, InVec.Y ), IntVector2D( InVec.X - 1, InVec.Y ), IntVector2D( InVec.X, InVec.Y + 1 ), IntVector2D( InVec.X, InVec.Y - 1 ) };
+
+		for ( const IntVector2D& Neighbor : Neighbors )
+		{
+			if ( IsValid( Neighbor ) && !GetEntry( Neighbor ).WasVisited() )
+			{
+				if ( GetEntry( InVec ).Height - GetEntry( Neighbor ).Height <= 1 )
+				{
+					GetEntry( Neighbor ).Prev = InVec;
+					OutLocs.push( Neighbor );
+				}
+			}
+		}
+	}
+
 	void SolvePath()
 	{
 		std::queue<IntVector2D> ToVisit;
@@ -1755,6 +1772,34 @@ struct Heightmap
 
 		HeightmapEntry* CurrMapEntry = &GetEntry( EndPos );
 		while ( CurrMapEntry && CurrMapEntry->Pos != StartPos && CurrMapEntry->WasVisited() )
+		{
+			Path.push_back( CurrMapEntry->Pos );
+			CurrMapEntry = &GetEntry( CurrMapEntry->Prev );
+		}
+	}
+
+	void SolvePathToFirstA()
+	{
+		std::queue<IntVector2D> ToVisit;
+		ToVisit.push( EndPos );
+		GetEntry( EndPos ).Prev = StartPos;
+
+		IntVector2D CurrEntry = EndPos;
+		while ( GetEntry(CurrEntry).Height != 'a' && ToVisit.size() > 0 )
+		{
+			CurrEntry = ToVisit.front();
+			ToVisit.pop();
+
+			AddValidNeighborsRev( CurrEntry, ToVisit );
+		}
+
+		if ( GetEntry( CurrEntry ).Height != 'a' )
+		{
+			std::cout << "Failed to find path." << std::endl;
+		}
+
+		HeightmapEntry* CurrMapEntry = &GetEntry( CurrEntry );
+		while ( CurrMapEntry && CurrMapEntry->Pos != EndPos && CurrMapEntry->WasVisited() )
 		{
 			Path.push_back( CurrMapEntry->Pos );
 			CurrMapEntry = &GetEntry( CurrMapEntry->Prev );
@@ -1868,242 +1913,6 @@ struct Heightmap
 	}
 };
 
-/*
-struct Heightmap
-{
-	std::vector<std::vector<HeightmapEntry>> Data;
-
-	IntVector2D StartLoc;
-	IntVector2D EndLoc;
-
-	void AddLine( const std::string& InLine )
-	{
-		int CurrRow = Data.size();
-		std::vector<HeightmapEntry> Entries;
-		for ( size_t Col = 0; Col < InLine.size(); ++Col )
-		{
-			HeightmapEntry NewEntry;
-			NewEntry.Height = InLine[Col];
-			NewEntry.Pos = IntVector2D( CurrRow, Col );
-			Entries.push_back( NewEntry );
-		}
-
-		Data.push_back( Entries );
-	}
-
-	void InitData()
-	{
-		for ( size_t Col = 0; Col < Data.size(); ++Col )
-		{
-			std::vector<HeightmapEntry>& CurrRow = Data[Col];
-			for ( size_t Row = 0; Row < CurrRow.size(); ++Row )
-			{
-				if ( CurrRow[Row].Height == 'S' )
-				{
-					StartLoc.X = Col;
-					StartLoc.Y = Row;
-					CurrRow[Row].Height = 'a';
-				}
-				else if ( CurrRow[Row].Height == 'E' )
-				{
-					EndLoc.X = Col;
-					EndLoc.Y = Row;
-					CurrRow[Row].Height = 'z';
-				}
-			}
-		}
-	}
-
-	HeightmapEntry& GetEntry( const IntVector2D& InLoc )
-	{
-		return Data[InLoc.X][InLoc.Y];
-	}
-
-	const HeightmapEntry& GetEntry( const IntVector2D& InLoc ) const
-	{
-		return Data[InLoc.X][InLoc.Y];
-	}
-
-	bool IsValid( const IntVector2D& InVector ) const
-	{
-		return InVector.X >= 0 && InVector.Y >= 0 && InVector.X < static_cast< int >( Data.size() ) && Data.size() > 0 && InVector.Y < static_cast< int >( Data[0].size() );
-	}
-
-	void AddValidNeighbors( const IntVector2D& InVec, std::queue<IntVector2D>& OutLocs )
-	{
-		std::vector<IntVector2D> Neighbors{ IntVector2D( InVec.X + 1, InVec.Y ), IntVector2D( InVec.X - 1, InVec.Y ), IntVector2D( InVec.X, InVec.Y + 1 ), IntVector2D( InVec.X, InVec.Y - 1 ) };
-
-		for ( const IntVector2D& Neighbor : Neighbors )
-		{
-			if ( IsValid( Neighbor ) && GetEntry(Neighbor).Prev == IntVector2D(-1, -1) )
-			{
-				if ( std::abs( GetEntry( Neighbor ).Height - GetEntry( InVec ).Height ) <= 1 )
-				{
-					GetEntry( Neighbor ).Prev = InVec;
-					OutLocs.push( Neighbor );
-				}
-			}
-		}
-	}
-
-	int GetDistToEnd()
-	{
-		std::queue<IntVector2D> PendingLocs;
-		PendingLocs.push( StartLoc );
-
-		IntVector2D CurrLoc;
-		while ( PendingLocs.size() > 0 )
-		{
-			CurrLoc = PendingLocs.front();
-			PendingLocs.pop();
-
-			if ( CurrLoc == EndLoc )
-			{
-				break;
-			}
-
-			AddValidNeighbors( CurrLoc, PendingLocs );
-		}
-
-		int ShortestPathLen = 0;
-		IntVector2D BacktrackLock = CurrLoc;
-
-		if ( BacktrackLock == EndLoc )
-		{
-			while ( !(BacktrackLock == StartLoc) )
-			{
-				BacktrackLock = GetEntry( BacktrackLock ).Prev;
-				++ShortestPathLen;
-			}
-		}
-
-		return ShortestPathLen;
-	}
-
-	char GetPrevNeighborChar( const IntVector2D& InLoc ) const
-	{
-		const IntVector2D& PrevLoc = GetEntry( InLoc ).Prev;
-		if ( InLoc.X < PrevLoc.X )
-		{
-			return '<';
-		}
-		else if ( InLoc.X > PrevLoc.X )
-		{
-			return '>';
-		}
-		else if ( InLoc.Y < PrevLoc.Y )
-		{
-			return '^';
-		}
-		else if ( InLoc.Y > PrevLoc.Y )
-		{
-			return 'v';
-		}
-
-		return 'X';
-	}
-
-	void PrintData() const
-	{
-		for ( const std::vector<HeightmapEntry>& Row : Data )
-		{
-			for ( const HeightmapEntry& Entry : Row )
-			{
-				std::cout << Entry.Height;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	void PrintPath() const
-	{
-		std::vector<std::vector<char>> PathData;
-		const size_t RowCt = Data.size();
-		const size_t ColCt = Data[0].size();
-		for ( size_t Row = 0; Row < RowCt; ++Row )
-		{
-			std::vector<char> NewRow;
-			for ( size_t Col = 0; Col < ColCt; ++Col )
-			{
-				NewRow.push_back( '.' );
-			}
-			PathData.push_back( NewRow );
-		}
-
-		IntVector2D CurrPathStep = EndLoc;
-		PathData[CurrPathStep.X][CurrPathStep.Y] = 'E';
-		CurrPathStep = GetEntry( CurrPathStep ).Prev;
-		while ( !( CurrPathStep == StartLoc) )
-		{
-			PathData[CurrPathStep.X][CurrPathStep.Y] = GetPrevNeighborChar(CurrPathStep);
-			CurrPathStep = GetEntry( CurrPathStep ).Prev;
-		}
-
-		for ( const std::vector<char>& Row : PathData )
-		{
-			for ( char Entry : Row )
-			{
-				std::cout << Entry;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-
-	void PrintRaw() const
-	{
-		for ( const std::vector<HeightmapEntry>& Row : Data )
-		{
-			for ( const HeightmapEntry& Entry : Row )
-			{
-				if ( !( Entry.Prev == IntVector2D( -1, -1 ) ) )
-				{
-					std::cout << GetPrevNeighborChar( Entry.Pos );
-				}
-				else
-				{
-					std::cout << '.';
-				}
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
-};
-
-int Day12Part1( const std::string& Filename, bool bShouldPrint = false )
-{
-	std::ifstream myfile;
-	myfile.open( Filename );
-
-	Heightmap Map;
-	while ( myfile.good() )
-	{
-		char line[4096];
-		myfile.getline( line, 4096 );
-		std::string Line( line );
-
-		Map.AddLine( Line );
-	}
-
-	myfile.close();
-
-	Map.InitData();
-
-	int Sol = Map.GetDistToEnd();
-
-	if ( bShouldPrint )
-	{
-		Map.PrintData();
-		Map.PrintRaw();
-		Map.PrintPath();
-	}
-
-	return Sol;
-}
-//*/
-
 int Day12Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
@@ -2142,15 +1951,34 @@ int Day12Part2( const std::string& Filename, bool bShouldPrint = false )
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	Heightmap Map;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		Map.AddMapLine( Line );
 	}
 
 	myfile.close();
-	return 0;
+
+	if ( bShouldPrint )
+	{
+		// Not Supported
+		//Map.Print();
+	}
+
+	Map.SolvePathToFirstA();
+
+	if ( bShouldPrint )
+	{
+		// Not Supported
+		//Map.PrintPath();
+		//Map.PrintPrevs();
+	}
+
+	return Map.GetPathLen();
 }
 
 int main()
