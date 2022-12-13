@@ -1981,6 +1981,40 @@ int Day12Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Map.GetPathLen();
 }
 
+int Day13Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
+int Day13Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
 int main()
 {
 	/*
@@ -2252,7 +2286,6 @@ int main()
 	std::cout << "Day11Part1: " << Day11Part1( Monkeys ) << std::endl;
 	std::cout << "Day11Part2Sample: " << Day11Part2( SampleMonkeysPt2 ) << std::endl;
 	std::cout << "Day11Part2: " << Day11Part2( MonkeysPt2 ) << std::endl;
-	//*/
 
 	std::string Day12Sample( "..\\..\\Day12Sample.txt" );
 	std::string Day12Input( "..\\..\\Day12Input.txt" );
@@ -2260,6 +2293,14 @@ int main()
 	std::cout << "Day12Part1: " << Day12Part1( Day12Input, true ) << std::endl;
 	std::cout << "Day12Part2Sample: " << Day12Part2( Day12Sample ) << std::endl;
 	std::cout << "Day12Part2: " << Day12Part2( Day12Input ) << std::endl;
+	//*/
+
+	std::string Day13Sample( "..\\..\\Day13Sample.txt" );
+	std::string Day13Input( "..\\..\\Day13Input.txt" );
+	std::cout << "Day13Part1Sample: " << Day13Part1( Day13Sample, true ) << std::endl;
+	std::cout << "Day13Part1: " << Day13Part1( Day13Input, true ) << std::endl;
+	std::cout << "Day13Part2Sample: " << Day13Part2( Day13Sample ) << std::endl;
+	std::cout << "Day13Part2: " << Day13Part2( Day13Input ) << std::endl;
 
 	std::cin.get();
 
