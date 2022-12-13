@@ -1981,38 +1981,209 @@ int Day12Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Map.GetPathLen();
 }
 
+std::string BreakList( const std::string& Input )
+{
+	return Input.substr( 1, Input.size() - 2 );
+}
+
+// Returns true if should continue
+bool CompareInts( int Left, int Right, bool& OutResult )
+{
+	OutResult = Left < Right;
+	return Left == Right;
+}
+
+bool IsList( const std::string& InLine )
+{
+	return InLine.size() > 0 && InLine[0] == '[';
+}
+
+std::string GetFirstElement( const std::string& InString )
+{
+	int ScopeDepth = 0;
+	for ( size_t Idx = 0; Idx < InString.size(); ++Idx )
+	{
+		char Curr = InString[Idx];
+		if ( Curr == ',' && ScopeDepth == 0 )
+		{
+			return InString.substr( 0, Idx );
+		}
+
+		if ( Curr == '[' )
+		{
+			++ScopeDepth;
+		}
+		else if ( Curr == ']' )
+		{
+			--ScopeDepth;
+		}
+	}
+
+	return InString;
+}
+
+bool ArePacketsInOrder( const std::string& Left, const std::string& Right, bool& bOutResult )
+{
+	std::string LeftElems = Left;
+	std::string RightElems = Right;
+
+	while ( true )
+	{
+		// Get the next element
+		std::string LeftElem = GetFirstElement( LeftElems );
+		std::string RightElem = GetFirstElement( RightElems );
+
+		// If left runs out first, we're in order
+		if ( LeftElem.size() == 0 && RightElem.size() == 0 )
+		{
+			bOutResult = true;
+			return true;
+		}
+		else if ( LeftElem.size() == 0 )
+		{
+			bOutResult = true;
+			return false;
+		}
+		else if ( RightElem.size() == 0 )
+		{
+			bOutResult = false;
+			return false;
+		}
+
+		// Process that element!
+		bool bLeftIsList = IsList( LeftElem );
+		bool bRightIsList = IsList( RightElem );
+
+		if ( bLeftIsList && bRightIsList )
+		{
+			if ( !ArePacketsInOrder( BreakList( LeftElem ), BreakList( RightElem ), bOutResult ) )
+			{
+				return false;
+			}
+		}
+		else if ( bLeftIsList == bRightIsList )
+		{
+			if ( !CompareInts( stoi( LeftElem ), stoi( RightElem ), bOutResult ) )
+			{
+				return false;
+			}
+		}
+		else
+		{
+			std::string ListLeft = bLeftIsList ? LeftElem : std::string( '[' + LeftElem + ']' );
+			std::string ListRight = bRightIsList ? RightElem : std::string( '[' + RightElem + ']' );
+			if ( !ArePacketsInOrder( ListLeft, ListRight, bOutResult ) )
+			{
+				return false;
+			}
+		}
+
+		size_t LeftIdx = LeftElems.find( ',' );
+		size_t RightIdx = RightElems.find( ',' );
+		LeftElems = LeftIdx == std::string::npos ? "" : LeftElems.substr( LeftIdx + 1 );
+		RightElems = RightIdx == std::string::npos ? "" : RightElems.substr( RightIdx + 1 );
+	}
+}
+
 int Day13Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	int CurrIdx = 1;
+	int SumOrderedPairs = 0;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
-		std::string Line( line );
+		std::string Left( line );
+		myfile.getline( line, 4096 );
+		std::string Right( line );
+
+		bool bResult = false;
+		ArePacketsInOrder( Left, Right, bResult );
+		if ( bResult )
+		{
+			SumOrderedPairs += CurrIdx;
+		}
+
+		++CurrIdx;
+
+
+		if ( !myfile.good() )
+		{
+			break;
+		}
+
+		// Clear the empty line
+		myfile.getline( line, 4096 );
 	}
 
 	myfile.close();
 
-	return 0;
+	return SumOrderedPairs;
 }
+
+struct DistressPacket
+{
+	DistressPacket( const std::string& InString ) : Packet( InString ) {}
+
+	bool operator<( const DistressPacket& Other ) const
+	{
+		bool bOutput = false;
+		ArePacketsInOrder( this->Packet, Other.Packet, bOutput );
+		return bOutput;
+	}
+
+	std::string Packet;
+};
 
 int Day13Part2( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	std::vector<DistressPacket> Packets;
+	Packets.push_back( DistressPacket( "[[2]]"));
+	Packets.push_back( DistressPacket( "[[6]]"));
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		if ( Line.size() > 0 )
+		{
+			Packets.push_back( DistressPacket( Line ) );
+		}
 	}
 
 	myfile.close();
 
-	return 0;
+	std::sort( Packets.begin(), Packets.end() );
+
+	int Idx0 = 0, Idx1 = 0;
+	int Ct = 1;
+	for ( const DistressPacket& Packet : Packets )
+	{
+		if ( Packet.Packet == "[[2]]" )
+		{
+			Idx0 = Ct;
+		}
+		else if ( Packet.Packet == "[[6]]" )
+		{
+			Idx1 = Ct;
+		}
+
+		if ( bShouldPrint )
+		{
+			std::cout << Packet.Packet << std::endl;
+		}
+
+		++Ct;
+	}
+
+	return Idx0 * Idx1;
 }
 
 int main()
@@ -2297,9 +2468,9 @@ int main()
 
 	std::string Day13Sample( "..\\..\\Day13Sample.txt" );
 	std::string Day13Input( "..\\..\\Day13Input.txt" );
-	std::cout << "Day13Part1Sample: " << Day13Part1( Day13Sample, true ) << std::endl;
-	std::cout << "Day13Part1: " << Day13Part1( Day13Input, true ) << std::endl;
-	std::cout << "Day13Part2Sample: " << Day13Part2( Day13Sample ) << std::endl;
+	std::cout << "Day13Part1Sample: " << Day13Part1( Day13Sample ) << std::endl;
+	std::cout << "Day13Part1: " << Day13Part1( Day13Input) << std::endl;
+	std::cout << "Day13Part2Sample: " << Day13Part2( Day13Sample, true ) << std::endl;
 	std::cout << "Day13Part2: " << Day13Part2( Day13Input ) << std::endl;
 
 	std::cin.get();
