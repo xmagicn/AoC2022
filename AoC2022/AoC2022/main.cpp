@@ -2186,21 +2186,244 @@ int Day13Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Idx0 * Idx1;
 }
 
+struct CaveSliceSim
+{
+	CaveSliceSim( int MinWidth, int MaxWidth, int InHeight ) : Width(MaxWidth - MinWidth + 1), WidthOffset(MinWidth), Height(InHeight)
+	{
+		for ( int Row = 0; Row < Height; ++Row )
+		{
+			std::vector<char> RowStr;
+			for (int Col = 0; Col < Width; ++Col )
+			{
+				RowStr.push_back( '.' );
+			}
+			Grid.push_back( RowStr );
+		}
+	}
+
+	void AddRockLine( const std::vector<IntVector2D>& Line )
+	{
+		for ( size_t Idx = 1; Idx < Line.size(); ++Idx )
+		{
+			IntVector2D Start = Line[Idx - 1];
+			IntVector2D End = Line[Idx];
+
+			IntVector2D Dir = End - Start;
+
+			// Dumb Normal
+			int XSign = Dir.X > 0 ? 1 : -1;
+			int YSign = Dir.Y > 0 ? 1 : -1;
+			Dir = Dir / Dir;
+			Dir.X *= XSign;
+			Dir.Y *= YSign;
+
+			GetGridElement( Start.X, Start.Y ) = '#';
+			while ( Start != End )
+			{
+				Start = Start + Dir;
+				GetGridElement(Start.X, Start.Y) = '#';
+			}
+		}
+	}
+
+	bool TickSim()
+	{
+		if ( CurrSandPos == IntVector2D( -1, -1 ) )
+		{
+			CurrSandPos = IntVector2D( 500, 1 );
+			
+			if ( GetGridElement( CurrSandPos ) == 'o' )
+			{
+				return false;
+			}
+
+			GetGridElement( CurrSandPos ) = '+';
+			++SandCt;
+		}
+		else
+		{
+			IntVector2D NextSandPos = CurrSandPos;
+			++NextSandPos.Y;
+
+			if ( GetGridElement( NextSandPos ) == '.' )
+			{
+				// Nothing to do here, skip to the end!
+			}
+			else if ( !IsValidGridElement( NextSandPos.X - 1, NextSandPos.Y ) )
+			{
+				--SandCt;
+				return false;
+			}
+			else if ( GetGridElement( NextSandPos.X - 1, NextSandPos.Y ) == '.' )
+			{
+				--NextSandPos.X;
+			}
+			else if ( !IsValidGridElement( NextSandPos.X + 1, NextSandPos.Y ) )
+			{
+				--SandCt;
+				return false;
+			}
+			else if ( GetGridElement( NextSandPos.X + 1, NextSandPos.Y ) == '.' )
+			{
+				++NextSandPos.X;
+			}
+			else
+			{
+				GetGridElement( CurrSandPos ) = 'o';
+				CurrSandPos = IntVector2D( -1, -1 );
+				return true;
+			}
+
+			GetGridElement( CurrSandPos ) = '.';
+			GetGridElement( NextSandPos ) = '+';
+			CurrSandPos = NextSandPos;
+
+			if ( CurrSandPos.Y == Height )
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void Print() const
+	{
+		int Ct = 0;
+		for ( const std::vector<char>& Row : Grid )
+		{
+			std::cout << Ct <<  " ";
+			for ( char Entry : Row )
+			{
+				std::cout << Entry;
+			}
+			std::cout << std::endl;
+			++Ct;
+		}
+		std::cout << std::endl;
+	}
+
+	char& GetGridElement( const IntVector2D& InPos )
+	{
+		return GetGridElement( InPos.X, InPos.Y );
+	}
+
+	char& GetGridElement( int RawX, int Y )
+	{
+		return Grid[Y - 1][RawX - WidthOffset];
+	}
+
+	bool IsValidGridElement( const IntVector2D& InPos ) const
+	{
+		return IsValidGridElement( InPos.X, InPos.Y );
+	}
+
+	bool IsValidGridElement( int RawX, int Y ) const
+	{
+		int NewX = Y - 1;
+		int NewY = RawX - WidthOffset;
+		return NewX >= 0 && NewX < ( int )Grid.size() && NewY >= 0 && NewY < ( int )Grid[0].size();
+	}
+
+	std::vector<std::vector<char>> Grid;
+	int Width;
+	int WidthOffset;
+	int Height;
+
+	IntVector2D CurrSandPos = IntVector2D( -1, -1 );
+	int SandCt = 0;
+};
+
+std::vector<IntVector2D> ReadDay14Line( const std::string& InLine )
+{
+	std::vector<IntVector2D> Points;
+	auto Start = 0U;
+	auto End = 0U;
+
+	do
+	{
+		End = InLine.find( " -> ", Start );
+
+		std::string Instruction = InLine.substr( Start, End - Start );
+
+		Start = End + 4;
+
+		// Don't ask me about this scope I don't wanna talk about it
+		{
+			size_t EndInd = Instruction.find( "," );
+			Points.push_back( IntVector2D( stoi( Instruction.substr( 0, EndInd ) ), stoi( Instruction.substr( EndInd + 1 ) ) ) );
+		}
+
+	} while ( End != std::string::npos );
+
+	return Points;
+}
+
+void GetWidthDimensions( const std::vector<std::vector<IntVector2D>>& Points, int& OutMinWidth, int& OutMaxWidth, int& OutHeight )
+{
+	OutMinWidth = INT_MAX;
+	OutMaxWidth = INT_MIN;
+	OutHeight = 0;
+
+	for ( const std::vector<IntVector2D>& Row : Points )
+	{
+		for ( const IntVector2D& Point : Row )
+		{
+			if ( OutMinWidth > Point.X )
+			{
+				OutMinWidth = Point.X;
+			}
+			else if ( OutMaxWidth < Point.X )
+			{
+				OutMaxWidth = Point.X;
+			}
+
+			if ( OutHeight < Point.Y )
+			{
+				OutHeight = Point.Y;
+			}
+		}
+	}
+}
+
 int Day14Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	std::vector<std::vector<IntVector2D>> RockLines;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		RockLines.push_back( ReadDay14Line( Line ) );
 	}
 
 	myfile.close();
 
-	return 0;
+	int MinWidth, MaxWidth, Height;
+	GetWidthDimensions( RockLines, MinWidth, MaxWidth, Height );
+
+	CaveSliceSim Sim( MinWidth, MaxWidth, Height );
+	if ( bShouldPrint )
+		Sim.Print();
+
+	for ( const std::vector<IntVector2D>& Line : RockLines )
+	{
+		Sim.AddRockLine( Line );
+	}
+	if ( bShouldPrint )
+		Sim.Print();
+
+	while ( Sim.TickSim() )
+	{
+		if ( bShouldPrint )
+			Sim.Print();
+	}
+
+	return Sim.SandCt;
 }
 
 int Day14Part2( const std::string& Filename, bool bShouldPrint = false )
