@@ -2188,8 +2188,14 @@ int Day13Part2( const std::string& Filename, bool bShouldPrint = false )
 
 struct CaveSliceSim
 {
-	CaveSliceSim( int MinWidth, int MaxWidth, int InHeight ) : Width(MaxWidth - MinWidth + 1), WidthOffset(MinWidth), Height(InHeight)
+	CaveSliceSim( int MinWidth, int MaxWidth, int InHeight, bool bUseGround = false ) : Width(MaxWidth - MinWidth + 1), WidthOffset(MinWidth), Height(InHeight + 1), bHasGround(bUseGround)
 	{
+		if ( bUseGround )
+		{
+			Width += Height * 2;
+			WidthOffset -= Height;
+		}
+
 		for ( int Row = 0; Row < Height; ++Row )
 		{
 			std::vector<char> RowStr;
@@ -2198,6 +2204,23 @@ struct CaveSliceSim
 				RowStr.push_back( '.' );
 			}
 			Grid.push_back( RowStr );
+		}
+
+		if ( bUseGround )
+		{
+			std::vector<char> RowStr;
+			for ( int Col = 0; Col < Width; ++Col )
+			{
+				RowStr.push_back( '.' );
+			}
+			Grid.push_back( RowStr );
+
+			std::vector<char> FullStr;
+			for ( int Col = 0; Col < Width; ++Col )
+			{
+				FullStr.push_back( '#' );
+			}
+			Grid.push_back( FullStr );
 		}
 	}
 
@@ -2217,11 +2240,11 @@ struct CaveSliceSim
 			Dir.X *= XSign;
 			Dir.Y *= YSign;
 
-			GetGridElement( Start.X, Start.Y ) = '#';
+			GetGridElement( Start.X, Start.Y + 1 ) = '#';
 			while ( Start != End )
 			{
 				Start = Start + Dir;
-				GetGridElement(Start.X, Start.Y) = '#';
+				GetGridElement(Start.X, Start.Y + 1) = '#';
 			}
 		}
 	}
@@ -2278,7 +2301,7 @@ struct CaveSliceSim
 			GetGridElement( NextSandPos ) = '+';
 			CurrSandPos = NextSandPos;
 
-			if ( CurrSandPos.Y == Height )
+			if ( !bHasGround && CurrSandPos.Y == Height )
 			{
 				return false;
 			}
@@ -2293,6 +2316,11 @@ struct CaveSliceSim
 		for ( const std::vector<char>& Row : Grid )
 		{
 			std::cout << Ct <<  " ";
+			if ( Ct < 10 )
+			{
+				std::cout << " ";
+			}
+
 			for ( char Entry : Row )
 			{
 				std::cout << Entry;
@@ -2329,6 +2357,7 @@ struct CaveSliceSim
 	int Width;
 	int WidthOffset;
 	int Height;
+	bool bHasGround;
 
 	IntVector2D CurrSandPos = IntVector2D( -1, -1 );
 	int SandCt = 0;
@@ -2431,16 +2460,39 @@ int Day14Part2( const std::string& Filename, bool bShouldPrint = false )
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	std::vector<std::vector<IntVector2D>> RockLines;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		RockLines.push_back( ReadDay14Line( Line ) );
 	}
 
 	myfile.close();
 
-	return 0;
+	int MinWidth, MaxWidth, Height;
+	GetWidthDimensions( RockLines, MinWidth, MaxWidth, Height );
+
+	CaveSliceSim Sim( MinWidth, MaxWidth, Height, true );
+	if ( bShouldPrint )
+		Sim.Print();
+
+	for ( const std::vector<IntVector2D>& Line : RockLines )
+	{
+		Sim.AddRockLine( Line );
+	}
+	if ( bShouldPrint )
+		Sim.Print();
+
+	while ( Sim.TickSim() )
+	{
+		if ( bShouldPrint )
+			Sim.Print();
+	}
+
+	return Sim.SandCt;
 }
 
 int main()
