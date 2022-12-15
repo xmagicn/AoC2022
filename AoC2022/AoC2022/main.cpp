@@ -2495,6 +2495,36 @@ int Day14Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Sim.SandCt;
 }
 
+struct Sensor
+{
+	void Init( const std::string& InLine )
+	{
+		const static size_t DistToXVal = 12U;
+		const static size_t DistToYVal = 4U;
+		const static size_t DistToBeaconXVal = 25U;
+		const static size_t DistToBeaconYVal = 4U;
+
+		size_t Start = DistToXVal;
+		size_t End = InLine.find( ",", Start );
+		Pos.X = stoi( InLine.substr( Start, End - Start ) );
+		
+		Start = End + DistToYVal;
+		End = InLine.find( ":", Start );
+		Pos.Y = stoi( InLine.substr( Start, End - Start ) );
+
+		Start = End + DistToBeaconXVal;
+		End = InLine.find( ",", Start );
+		ClosestBeaconPos.X = stoi( InLine.substr( Start, End - Start ) );
+
+		Start = End + DistToBeaconYVal;
+		End = InLine.find( ":", Start );
+		ClosestBeaconPos.Y = stoi( InLine.substr( Start, End - Start ) );
+	}
+
+	IntVector2D Pos;
+	IntVector2D ClosestBeaconPos;
+};
+
 int Day15Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
@@ -2517,11 +2547,16 @@ int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	std::vector<Sensor> Sensors;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		Sensor NewSensor;
+		NewSensor.Init( Line );
+		Sensors.push_back( NewSensor );
 	}
 
 	myfile.close();
