@@ -2495,6 +2495,40 @@ int Day14Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Sim.SandCt;
 }
 
+int Day15Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
+int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	return 0;
+}
+
 int main()
 {
 	/*
@@ -2780,7 +2814,6 @@ int main()
 	std::cout << "Day13Part1: " << Day13Part1( Day13Input) << std::endl;
 	std::cout << "Day13Part2Sample: " << Day13Part2( Day13Sample, true ) << std::endl;
 	std::cout << "Day13Part2: " << Day13Part2( Day13Input ) << std::endl;
-	//*/
 
 	std::string Day14Sample( "..\\..\\Day14Sample.txt" );
 	std::string Day14Input( "..\\..\\Day14Input.txt" );
@@ -2788,6 +2821,14 @@ int main()
 	std::cout << "Day14Part1: " << Day14Part1( Day14Input ) << std::endl;
 	std::cout << "Day14Part2Sample: " << Day14Part2( Day14Sample, true ) << std::endl;
 	std::cout << "Day14Part2: " << Day14Part2( Day14Input ) << std::endl;
+	//*/
+
+	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
+	std::string Day15Input( "..\\..\\Day15Input.txt" );
+	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample ) << std::endl;
+	std::cout << "Day15Part1: " << Day15Part1( Day15Input ) << std::endl;
+	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, true ) << std::endl;
+	std::cout << "Day15Part2: " << Day15Part2( Day15Input ) << std::endl;
 
 	std::cin.get();
 
