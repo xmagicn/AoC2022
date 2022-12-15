@@ -2525,6 +2525,107 @@ struct Sensor
 	IntVector2D ClosestBeaconPos;
 };
 
+struct CaveSystem
+{
+	CaveSystem( int InMinX, int InMaxX, int InMinY, int InMaxY ) : ColOffset(InMinX), RowOffset(InMinY)
+	{
+		int Width = InMaxX - InMinX;
+		int Height = InMaxY - InMinY;
+
+		for ( int Row = 0; Row < Height; ++Row )
+		{
+			std::vector<char> NewRow;
+			for ( int Col = 0; Col < Width; ++Col )
+			{
+				NewRow.push_back('.');
+			}
+			Grid.push_back( NewRow );
+		}
+	}
+
+	void InitSensors( const std::vector<Sensor>& InSensors )
+	{
+		for ( const Sensor& Curr : InSensors )
+		{
+			if ( IsValidGridElement( Curr.Pos ) )
+			{
+				GetGridElement( Curr.Pos ) = 'S';
+			}
+
+			if ( IsValidGridElement( Curr.ClosestBeaconPos ) )
+			{
+				GetGridElement( Curr.ClosestBeaconPos ) = 'B';
+			}
+		}
+	}
+
+	void Print() const
+	{
+		int Ct = RowOffset;
+		for ( const std::vector<char>& Row : Grid )
+		{
+			std::cout << Ct << " ";
+			if ( Ct < 10 && Ct >= 0)
+			{
+				std::cout << " ";
+			}
+
+			for ( char Entry : Row )
+			{
+				std::cout << Entry;
+			}
+			std::cout << std::endl;
+			++Ct;
+		}
+		std::cout << std::endl;
+	}
+
+	char& GetGridElement( const IntVector2D& InPos )
+	{
+		return GetGridElement( InPos.X, InPos.Y );
+	}
+
+	char& GetGridElement( int RawX, int RawY )
+	{
+		int Col = RawX - ColOffset;
+		int Row = RawY - RowOffset;
+		return Grid[Row][Col];
+	}
+
+	bool IsValidGridElement( const IntVector2D& InPos ) const
+	{
+		return IsValidGridElement( InPos.X, InPos.Y );
+	}
+
+	bool IsValidGridElement( int RawX, int RawY ) const
+	{
+		int Col = RawX - ColOffset;
+		int Row = RawY - RowOffset;
+		return Row >= 0 && Row < ( int )Grid.size() && Col >= 0 && Col < ( int )Grid[0].size();
+	}
+
+	std::vector<std::vector<char>> Grid;
+	int ColOffset;
+	int RowOffset;
+
+};
+
+void GetDay15Range( const std::vector<Sensor>& InSensors, int& MinX, int& MaxX, int& MinY, int& MaxY )
+{
+	MinX = INT_MAX;
+	MaxX = INT_MIN;
+	MinY = INT_MAX;
+	MaxY = INT_MIN;
+
+	for ( const Sensor& Curr : InSensors )
+	{
+		MinX = std::min( MinX, std::min( Curr.Pos.X, Curr.ClosestBeaconPos.X ) );
+		MaxX = std::max( MaxX, std::max( Curr.Pos.X, Curr.ClosestBeaconPos.X ) );
+		MinY = std::min( MinY, std::min( Curr.Pos.Y, Curr.ClosestBeaconPos.Y ) );
+		MaxY = std::max( MaxY, std::max( Curr.Pos.Y, Curr.ClosestBeaconPos.Y ) );
+	}
+}
+
 int Day15Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
@@ -2560,6 +2661,15 @@ int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
 	}
 
 	myfile.close();
+
+	int MinX, MaxX, MinY, MaxY;
+	GetDay15Range( Sensors, MinX, MaxX, MinY, MaxY );
+	CaveSystem Caves( MinX, MaxX + 1, MinY, MaxY + 1 );
+	Caves.InitSensors( Sensors );
+	if ( bShouldPrint )
+	{
+		Caves.Print();
+	}
 
 	return 0;
 }
@@ -2860,7 +2970,7 @@ int main()
 
 	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
 	std::string Day15Input( "..\\..\\Day15Input.txt" );
-	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample ) << std::endl;
+	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, true ) << std::endl;
 	std::cout << "Day15Part1: " << Day15Part1( Day15Input ) << std::endl;
 	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, true ) << std::endl;
 	std::cout << "Day15Part2: " << Day15Part2( Day15Input ) << std::endl;
