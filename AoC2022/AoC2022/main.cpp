@@ -2673,6 +2673,22 @@ void GetDay15Range( const std::vector<Sensor>& InSensors, int& MinX, int& MaxX, 
 	}
 }
 
+void GetDay15RangeWithDistance( const std::vector<Sensor>& InSensors, int& MinX, int& MaxX, int& MinY, int& MaxY )
+{
+	MinX = INT_MAX;
+	MaxX = INT_MIN;
+	MinY = INT_MAX;
+	MaxY = INT_MIN;
+
+	for ( const Sensor& Curr : InSensors )
+	{
+		MinX = std::min( MinX, Curr.Pos.X - Curr.DistToBeacon);
+		MaxX = std::max( MaxX, Curr.Pos.X + Curr.DistToBeacon);
+		MinY = std::min( MinY, Curr.Pos.Y - Curr.DistToBeacon );
+		MaxY = std::max( MaxY, Curr.Pos.Y + Curr.DistToBeacon );
+	}
+}
+
 int Day15Part1( const std::string& Filename, int AnswerRow, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
@@ -2693,31 +2709,68 @@ int Day15Part1( const std::string& Filename, int AnswerRow, bool bShouldPrint = 
 	myfile.close();
 
 	int MinX, MaxX, MinY, MaxY;
-	GetDay15Range( Sensors, MinX, MaxX, MinY, MaxY );
-	CaveSystem Caves( MinX, MaxX + 1, MinY, MaxY + 1 );
-	Caves.InitSensors( Sensors );
-	if ( bShouldPrint )
-	{
-		Caves.Print();
-	}
+	GetDay15RangeWithDistance( Sensors, MinX, MaxX, MinY, MaxY );
 
 	std::vector<Sensor> RelevantSensors;
 	for ( const Sensor& Curr : Sensors )
 	{
-		if ( std::abs( AnswerRow - Curr.Pos.Y ) < Curr.DistToBeacon )
+		if ( std::abs( AnswerRow - Curr.Pos.Y ) <= Curr.DistToBeacon )
 		{
-			Caves.RecordSensorArea( Curr );
 			RelevantSensors.push_back( Curr );
 		}
 	}
 
-	//Caves.RecordSensorArea( RelevantSensors.front() );
-	if ( bShouldPrint )
+	int EmptyPosCount = 0;
+	for ( int Col = MinX; Col < MaxX; ++Col )
 	{
-		Caves.Print();
+		bool bObjectPresent = false;
+		bool bWithinRange = false;
+		IntVector2D CurrPos = IntVector2D( Col, AnswerRow );
+		for ( const Sensor& CurrSensor : Sensors )
+		{
+			if ( IsWithinRange( CurrSensor.Pos, CurrPos, CurrSensor.DistToBeacon ) )
+			{
+				bWithinRange = true;
+			}
+
+			if ( CurrSensor.ClosestBeaconPos == CurrPos)
+			{
+				bObjectPresent = true;
+				break;
+			}
+		}
+
+		if ( bWithinRange && !bObjectPresent )
+		{
+			++EmptyPosCount;
+		}
 	}
 
-	return Caves.GetEmptyPosCountInRow(AnswerRow);
+	if ( bShouldPrint )
+	{
+		GetDay15Range( Sensors, MinX, MaxX, MinY, MaxY );
+		CaveSystem Caves( MinX, MaxX + 1, MinY, MaxY + 1 );
+		Caves.InitSensors( Sensors );
+		if ( bShouldPrint )
+		{
+			Caves.Print();
+		}
+
+		for ( const Sensor& Curr : RelevantSensors )
+		{
+			Caves.RecordSensorArea( Curr );
+		}
+
+		//Caves.RecordSensorArea( RelevantSensors.front() );
+		if ( bShouldPrint )
+		{
+			Caves.Print();
+		}
+
+		//return Caves.GetEmptyPosCountInRow( AnswerRow );
+	}
+
+	return EmptyPosCount;
 }
 
 int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
@@ -3034,7 +3087,7 @@ int main()
 	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
 	std::string Day15Input( "..\\..\\Day15Input.txt" );
 	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, 10, true ) << std::endl;
-	std::cout << "Day15Part1: " << Day15Part1( Day15Input, 200000 ) << std::endl;
+	std::cout << "Day15Part1: " << Day15Part1( Day15Input, 2000000 ) << std::endl;
 	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, true ) << std::endl;
 	std::cout << "Day15Part2: " << Day15Part2( Day15Input ) << std::endl;
 
