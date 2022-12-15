@@ -1085,6 +1085,10 @@ IntVector2D IntVector2D::Up		= IntVector2D(0, 1);
 IntVector2D IntVector2D::Right	= IntVector2D( 1, 0 );
 IntVector2D IntVector2D::Down	= IntVector2D( 0, -1 );
 IntVector2D IntVector2D::Left	= IntVector2D( -1, 0 );
+static int ManhattanDist( const IntVector2D& A, const IntVector2D& B )
+{
+	return std::abs( A.X - B.X ) + std::abs( A.Y - B.Y );
+}
 
 // Don't look at this it's not good.
 inline bool operator<( const IntVector2D& lhs, const IntVector2D& rhs )
@@ -2495,6 +2499,11 @@ int Day14Part2( const std::string& Filename, bool bShouldPrint = false )
 	return Sim.SandCt;
 }
 
+bool IsWithinRange( const IntVector2D& Pos, const IntVector2D& Other, int Dist )
+{
+	return ManhattanDist( Pos, Other ) <= Dist;
+}
+
 struct Sensor
 {
 	void Init( const std::string& InLine )
@@ -2519,10 +2528,13 @@ struct Sensor
 		Start = End + DistToBeaconYVal;
 		End = InLine.find( ":", Start );
 		ClosestBeaconPos.Y = stoi( InLine.substr( Start, End - Start ) );
+
+		DistToBeacon = ManhattanDist(Pos, ClosestBeaconPos);
 	}
 
 	IntVector2D Pos;
 	IntVector2D ClosestBeaconPos;
+	int DistToBeacon = 0;
 };
 
 struct CaveSystem
@@ -2557,6 +2569,41 @@ struct CaveSystem
 				GetGridElement( Curr.ClosestBeaconPos ) = 'B';
 			}
 		}
+	}
+
+	void RecordSensorArea( const Sensor& InSensor )
+	{
+		for ( int Row = RowOffset; Row < (int)Grid.size() + RowOffset; ++Row )
+		{
+			for ( int Col = ColOffset; Col < ( int )Grid[0].size() + ColOffset; ++Col )
+			{
+				IntVector2D Pos( Col, Row );
+				if ( IsWithinRange(Pos, InSensor.Pos, InSensor.DistToBeacon) )
+				{
+					char& GridElem = GetGridElement( Pos );
+					if ( GridElem == '.' )
+					{
+						GridElem = '#';
+					}
+				}
+			}
+		}
+	}
+
+	int GetEmptyPosCountInRow( int Row ) const
+	{
+		const std::vector<char>& SelectedRow = Grid[Row + RowOffset];
+
+		int EmptySpaceCt = 0;
+		for ( char Entry : SelectedRow )
+		{
+			if ( Entry == '#' )
+			{
+				++EmptySpaceCt;
+			}
+		}
+
+		return EmptySpaceCt;
 	}
 
 	void Print() const
@@ -2626,24 +2673,7 @@ void GetDay15Range( const std::vector<Sensor>& InSensors, int& MinX, int& MaxX, 
 	}
 }
 
-int Day15Part1( const std::string& Filename, bool bShouldPrint = false )
-{
-	std::ifstream myfile;
-	myfile.open( Filename );
-
-	while ( myfile.good() )
-	{
-		char line[4096];
-		myfile.getline( line, 4096 );
-		std::string Line( line );
-	}
-
-	myfile.close();
-
-	return 0;
-}
-
-int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
+int Day15Part1( const std::string& Filename, int AnswerRow, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
@@ -2670,6 +2700,39 @@ int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
 	{
 		Caves.Print();
 	}
+
+	std::vector<Sensor> RelevantSensors;
+	for ( const Sensor& Curr : Sensors )
+	{
+		if ( std::abs( AnswerRow - Curr.Pos.Y ) < Curr.DistToBeacon )
+		{
+			Caves.RecordSensorArea( Curr );
+			RelevantSensors.push_back( Curr );
+		}
+	}
+
+	//Caves.RecordSensorArea( RelevantSensors.front() );
+	if ( bShouldPrint )
+	{
+		Caves.Print();
+	}
+
+	return Caves.GetEmptyPosCountInRow(AnswerRow);
+}
+
+int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
 
 	return 0;
 }
@@ -2970,8 +3033,8 @@ int main()
 
 	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
 	std::string Day15Input( "..\\..\\Day15Input.txt" );
-	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, true ) << std::endl;
-	std::cout << "Day15Part1: " << Day15Part1( Day15Input ) << std::endl;
+	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, 10, true ) << std::endl;
+	std::cout << "Day15Part1: " << Day15Part1( Day15Input, 200000 ) << std::endl;
 	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, true ) << std::endl;
 	std::cout << "Day15Part2: " << Day15Part2( Day15Input ) << std::endl;
 
