@@ -2950,15 +2950,110 @@ unsigned long long Day15Part2( const std::string& Filename, int Range, bool bSho
 	return Output;
 }
 
+struct Valve
+{
+	std::string Name;
+	std::vector<std::string> Connections;
+	int FlowRate = -1;
+};
+
+struct VolcanoNetwork
+{
+	std::vector<Valve> Valves;
+
+	void AddValve( const std::string& InLine )
+	{
+		Valve NewValve;
+
+		NewValve.Name = InLine.substr( 6, 2 );
+
+		size_t Start = 23U;
+		size_t End = Start;
+		NewValve.FlowRate = stoi( InLine.substr( Start, InLine.find( ';', Start ) ) );
+
+		// Get kinda close, then hone in on the end;
+		Start += 24;
+		Start = InLine.find(' ', Start);
+		++Start;
+
+		do
+		{
+			End = InLine.find( ',', Start );
+			NewValve.Connections.push_back( InLine.substr( Start, End - Start ) );
+			Start = End + 2;
+
+		} while ( End != std::string::npos );
+
+		Valves.push_back( NewValve );
+	}
+
+	const Valve* GetValve( const std::string& ValveName ) const
+	{
+		for ( size_t Idx = 0; Idx < Valves.size(); ++Idx )
+		{
+			const Valve& CurrValve = Valves[Idx];
+			if ( CurrValve.Name == ValveName )
+			{
+				return &Valves[Idx];
+			}
+		}
+	}
+
+	int SolveNetwork() const
+	{
+		struct Node
+		{
+			Node() {}
+
+			const Valve* pValve = nullptr;
+			const Node* pPrev = nullptr;
+			int TotalPressure = 0;
+			int TimeElapsed = 0;
+		};
+
+		std::queue<Node*> WaitingNodes;
+
+		Node* FirstNode = new Node();
+		FirstNode->TotalPressure = Valves[0].FlowRate;
+		FirstNode->pValve = &Valves[0];
+		WaitingNodes.push( FirstNode );
+
+		while ( WaitingNodes.size() > 0 )
+		{
+			Node* CurrNode = WaitingNodes.front();
+			WaitingNodes.pop();
+
+			for ( const std::string& NextNode : CurrNode->pValve->Connections )
+			{
+				Node* NewNode = new Node();
+				NewNode->pValve = GetValve(NextNode);
+				NewNode->TotalPressure = Valves[0].FlowRate;
+				NewNode->TimeElapsed = CurrNode->TimeElapsed + 1;
+				WaitingNodes.push( FirstNode );
+			}
+		}
+
+		return 0;
+	}
+	
+	std::vector<Valve> OpenValves;
+	int PressureReleased = 0;
+	int RemainingTime = 30;
+};
+
 unsigned long long Day16Part1( const std::string& Filename, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
+
+	VolcanoNetwork Network;
+
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+		Network.AddValve( Line );
 	}
 
 	myfile.close();
@@ -2972,11 +3067,15 @@ unsigned long long Day16Part2( const std::string& Filename, bool bShouldPrint = 
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
+
+	VolcanoNetwork Network;
+
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+		Network.AddValve( Line );
 	}
 
 	myfile.close();
