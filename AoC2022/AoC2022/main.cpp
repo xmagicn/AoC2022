@@ -2950,6 +2950,41 @@ unsigned long long Day15Part2( const std::string& Filename, int Range, bool bSho
 	return Output;
 }
 
+unsigned long long Day16Part1( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+
+unsigned long long Day16Part2( const std::string& Filename, bool bShouldPrint = false )
+{
+	std::ifstream myfile;
+	myfile.open( Filename );
+	while ( myfile.good() )
+	{
+		char line[4096];
+		myfile.getline( line, 4096 );
+		std::string Line( line );
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
 int main()
 {
 	/*
@@ -3242,14 +3277,21 @@ int main()
 	std::cout << "Day14Part1: " << Day14Part1( Day14Input ) << std::endl;
 	std::cout << "Day14Part2Sample: " << Day14Part2( Day14Sample, true ) << std::endl;
 	std::cout << "Day14Part2: " << Day14Part2( Day14Input ) << std::endl;
-	//*/
 
 	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
 	std::string Day15Input( "..\\..\\Day15Input.txt" );
 	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, 10, true ) << std::endl;
-	//std::cout << "Day15Part1: " << Day15Part1( Day15Input, 2000000 ) << std::endl;
+	std::cout << "Day15Part1: " << Day15Part1( Day15Input, 2000000 ) << std::endl;
 	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, 20, true ) << std::endl;
 	std::cout << "Day15Part2: " << Day15Part2( Day15Input, 4000000 ) << std::endl;
+	//*/
+
+	std::string Day16Sample( "..\\..\\Day16Sample.txt" );
+	std::string Day16Input( "..\\..\\Day16Input.txt" );
+	std::cout << "Day16Part1Sample: " << Day16Part1( Day16Sample ) << std::endl;
+	std::cout << "Day16Part1: " << Day16Part1( Day16Input ) << std::endl;
+	std::cout << "Day16Part2Sample: " << Day16Part2( Day16Sample, true ) << std::endl;
+	std::cout << "Day16Part2: " << Day16Part2( Day16Input ) << std::endl;
 
 	std::cin.get();
 
