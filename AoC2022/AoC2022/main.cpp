@@ -2606,6 +2606,39 @@ struct CaveSystem
 		return EmptySpaceCt;
 	}
 
+	void Print( const std::vector<IntVector2D>& InPoints ) const
+	{
+		std::vector<std::vector<char>> PathData;
+		const size_t RowCt = Grid.size();
+		const size_t ColCt = Grid[0].size();
+		for ( size_t Row = 0; Row < RowCt; ++Row )
+		{
+			std::vector<char> NewRow;
+			for ( size_t Col = 0; Col < ColCt; ++Col )
+			{
+				NewRow.push_back( Grid[Row][Col] );
+			}
+			PathData.push_back( NewRow );
+		}
+
+		for ( const IntVector2D& Entry : InPoints )
+		{
+			int X = Entry.X - ColOffset;
+			int Y = Entry.Y - RowOffset;
+			PathData[X][Y] = 'A';
+		}
+
+		for ( const std::vector<char>& Row : PathData )
+		{
+			for ( char Entry : Row )
+			{
+				std::cout << Entry;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+
 	void Print() const
 	{
 		int Ct = RowOffset;
@@ -2619,6 +2652,7 @@ struct CaveSystem
 
 			for ( char Entry : Row )
 			{
+
 				std::cout << Entry;
 			}
 			std::cout << std::endl;
@@ -2773,21 +2807,147 @@ int Day15Part1( const std::string& Filename, int AnswerRow, bool bShouldPrint = 
 	return EmptyPosCount;
 }
 
-int Day15Part2( const std::string& Filename, bool bShouldPrint = false )
+// Does not clear OutPoints before appending
+void GetRadiusFromSensor( const Sensor& InSensor, std::vector<IntVector2D>& OutPoints )
+{
+	int Radius = InSensor.DistToBeacon + 1;
+	IntVector2D SenserPos = InSensor.Pos;
+	
+	for ( int Idx = 0; Idx < Radius; ++Idx )
+	{
+		int NewX = Radius - Idx;
+		int NewY = Idx;
+		IntVector2D Up( NewX, -NewY );
+		IntVector2D Right( NewX, NewY );
+		IntVector2D Down( -NewX, NewY );
+		IntVector2D Left( -NewX, -NewY );
+		OutPoints.push_back( Up + SenserPos );
+		OutPoints.push_back( Right + SenserPos );
+		OutPoints.push_back( Down + SenserPos );
+		OutPoints.push_back( Left + SenserPos );
+	}
+}
+
+unsigned long long Day15Part2( const std::string& Filename, int Range, bool bShouldPrint = false )
 {
 	std::ifstream myfile;
 	myfile.open( Filename );
 
+	std::vector<Sensor> Sensors;
 	while ( myfile.good() )
 	{
 		char line[4096];
 		myfile.getline( line, 4096 );
 		std::string Line( line );
+
+		Sensor NewSensor;
+		NewSensor.Init( Line );
+		Sensors.push_back( NewSensor );
 	}
 
 	myfile.close();
 
-	return 0;
+	int MinX, MaxX, MinY, MaxY;
+	GetDay15RangeWithDistance( Sensors, MinX, MaxX, MinY, MaxY );
+
+	std::vector<Sensor> RelevantSensors;
+	std::vector<IntVector2D> Points;
+	for ( const Sensor& Curr : Sensors )
+	{
+		GetRadiusFromSensor( Curr, Points );
+		
+
+		//if ( std::abs( AnswerRow - Curr.Pos.Y ) <= Curr.DistToBeacon )
+		{
+		//	RelevantSensors.push_back( Curr );
+		}
+	}
+
+	unsigned long long Output = 0;
+	for ( const IntVector2D& Point : Points )
+	{
+		if ( Point.X < 0 || Point.Y < 0 || Point.X > Range || Point.Y > Range )
+		{
+			continue;
+		}
+
+		bool bFoundOverlap = false;
+		for ( const Sensor& Curr : Sensors )
+		{
+			if ( IsWithinRange( Curr.Pos, Point, Curr.DistToBeacon ) )
+			{
+				bFoundOverlap = true;
+				break;
+			}
+		}
+
+		if ( !bFoundOverlap )
+		{
+			// By the skin of my teeth. This answer is TOO BIG for unsigned long long. Have to calculate separately.
+			Output = Point.X * 4000000 + Point.Y;
+			std::cout << Point.X << "," << Point.Y << ": " << Output << std::endl;
+			break;
+		}
+	}
+
+
+	/*
+	for ( int Col = MinX; Col < MaxX; ++Col )
+	{
+		bool bObjectPresent = false;
+		bool bWithinRange = false;
+		IntVector2D CurrPos = IntVector2D( Col, AnswerRow );
+		for ( const Sensor& CurrSensor : Sensors )
+		{
+			if ( IsWithinRange( CurrSensor.Pos, CurrPos, CurrSensor.DistToBeacon ) )
+			{
+				bWithinRange = true;
+			}
+
+			if ( CurrSensor.ClosestBeaconPos == CurrPos )
+			{
+				bObjectPresent = true;
+				break;
+			}
+		}
+
+		if ( bWithinRange && !bObjectPresent )
+		{
+			++EmptyPosCount;
+		}
+	}
+	//*/
+
+	//*
+	if ( bShouldPrint )
+	{
+		GetDay15Range( Sensors, MinX, MaxX, MinY, MaxY );
+		CaveSystem Caves( MinX, MaxX + 1, MinY, MaxY + 1 );
+		Caves.InitSensors( Sensors );
+		if ( bShouldPrint )
+		{
+			Caves.Print();
+		}
+		for ( const Sensor& Curr : Sensors )
+		{
+			Caves.RecordSensorArea( Curr );
+			if ( bShouldPrint )
+			{
+				Caves.Print();
+			}
+		}
+
+		Caves.RecordSensorArea( Sensors.front() );
+		if ( bShouldPrint )
+		{
+			Caves.Print();
+		}
+
+		//return Caves.GetEmptyPosCountInRow( AnswerRow );
+	}
+
+	//*/
+	return Output;
 }
 
 int main()
@@ -3087,9 +3247,9 @@ int main()
 	std::string Day15Sample( "..\\..\\Day15Sample.txt" );
 	std::string Day15Input( "..\\..\\Day15Input.txt" );
 	std::cout << "Day15Part1Sample: " << Day15Part1( Day15Sample, 10, true ) << std::endl;
-	std::cout << "Day15Part1: " << Day15Part1( Day15Input, 2000000 ) << std::endl;
-	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, true ) << std::endl;
-	std::cout << "Day15Part2: " << Day15Part2( Day15Input ) << std::endl;
+	//std::cout << "Day15Part1: " << Day15Part1( Day15Input, 2000000 ) << std::endl;
+	std::cout << "Day15Part2Sample: " << Day15Part2( Day15Sample, 20, true ) << std::endl;
+	std::cout << "Day15Part2: " << Day15Part2( Day15Input, 4000000 ) << std::endl;
 
 	std::cin.get();
 
