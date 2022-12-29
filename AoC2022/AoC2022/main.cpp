@@ -3084,6 +3084,528 @@ unsigned long long Day16Part2( const std::string& Filename, bool bShouldPrint = 
 	return Output;
 }
 
+template <typename T>
+struct RingBuffer
+{
+	const T& GetNext() const
+	{
+		if (Data.size() == 0)
+		{
+			return T();
+		}
+
+		const T& Output = Data[CurrIdx++];
+		if (CurrIdx >= Data.size())
+		{
+			CurrIdx = 0;
+		}
+		return Output;
+	}
+
+	void push_back(const T& InItem)
+	{
+		Data.push_back(InItem);
+	}
+
+private:
+	std::vector<T> Data;
+	mutable size_t CurrIdx = 0;
+};
+
+struct VolcanoRock
+{
+	std::vector<IntVector2D> RockLocs;
+	IntVector2D Position;
+	int Height = 0;
+};
+
+struct CaveSlice
+{
+	const int CaveWidth = 7;
+
+	// Row 0 is the floor row. Highest rows are at the highest indices
+	std::vector<std::vector<char>> CaveLines;
+
+	void AddEmptyRow(char LineChar = '.')
+	{
+		std::vector<char> NewLine;
+		NewLine.push_back('#');
+		for (int Ct = 0; Ct < CaveWidth; ++Ct)
+		{
+			NewLine.push_back(LineChar);
+		}
+		NewLine.push_back('#');
+		CaveLines.push_back(NewLine);
+	}
+
+	void AddRock(const VolcanoRock& InRock, RingBuffer<char>& InGasQueue)
+	{
+		for (int Ct = 0; Ct < InRock.Height; ++Ct)
+		{
+			AddEmptyRow();
+		}
+
+		VolcanoRock CurrRock = InRock;
+		CurrRock.Position = IntVector2D(2, 0);
+
+		for (const IntVector2D& RockPos : CurrRock.RockLocs)
+		{
+			UpdatePosition(RockPos + CurrRock.Position, '#');
+
+			// If rock is touching a rock ('#'), stop the fall
+			if (false)
+			{
+				break;
+			}
+
+			// Apply Gas
+			char GasDir = InGasQueue.GetNext();
+			if (GasDir == '>')
+			{
+				++CurrRock.Position.Y;
+			}
+
+			++CurrRock.Position.X;
+		}
+	}
+
+	void UpdatePosition(const IntVector2D& Pos, char InChar)
+	{
+		IntVector2D ActualPos = IntVector2D(Pos.X, static_cast<int>(CaveLines.size()) - 1 - Pos.Y);
+
+		CaveLines[ActualPos.Y][ActualPos.X] = InChar;
+	}
+
+	void Print() const
+	{
+		for (int Row = static_cast<int>(CaveLines.size()) - 1; Row >= 0; --Row)
+		{
+			for (char Val : CaveLines[Row])
+			{
+				std::cout << Val;
+			}
+			std::cout << std::endl;
+		}
+
+		std::cout << std::endl;
+	}
+};
+
+unsigned long long Day17Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	// Rock root is always the bottom left corner
+	/* #### */
+	VolcanoRock Rock0;
+	Rock0.RockLocs.push_back(IntVector2D(0, 0));
+	Rock0.RockLocs.push_back(IntVector2D(1, 0));
+	Rock0.RockLocs.push_back(IntVector2D(2, 0));
+	Rock0.RockLocs.push_back(IntVector2D(3, 0));
+	Rock0.Height = 1;
+
+	/*
+	.#.
+	###
+	.#.
+	*/
+	VolcanoRock Rock1;
+	Rock1.RockLocs.push_back(IntVector2D(1, 1));
+	Rock1.RockLocs.push_back(IntVector2D(0, 0));
+	Rock1.RockLocs.push_back(IntVector2D(1, 0));
+	Rock1.RockLocs.push_back(IntVector2D(2, 0));
+	Rock1.RockLocs.push_back(IntVector2D(1, -1));
+	Rock1.Height = 3;
+
+	/*
+	..#
+	..#
+	###
+	*/
+	VolcanoRock Rock2;
+	Rock2.RockLocs.push_back(IntVector2D(0, 0));
+	Rock2.RockLocs.push_back(IntVector2D(1, 0));
+	Rock2.RockLocs.push_back(IntVector2D(2, 0));
+	Rock2.RockLocs.push_back(IntVector2D(2, 1));
+	Rock2.RockLocs.push_back(IntVector2D(2, 2));
+	Rock2.Height = 3;
+
+	/*
+	#
+	#
+	#
+	#
+	*/
+	VolcanoRock Rock3;
+	Rock3.RockLocs.push_back(IntVector2D(0, 0));
+	Rock3.RockLocs.push_back(IntVector2D(0, 1));
+	Rock3.RockLocs.push_back(IntVector2D(0, 2));
+	Rock3.RockLocs.push_back(IntVector2D(0, 3));
+	Rock3.Height = 4;
+
+	/*
+	##
+	##
+	*/
+	VolcanoRock Rock4;
+	Rock4.RockLocs.push_back(IntVector2D(0, 0));
+	Rock4.RockLocs.push_back(IntVector2D(0, 1));
+	Rock4.RockLocs.push_back(IntVector2D(1, 0));
+	Rock4.RockLocs.push_back(IntVector2D(1, 1));
+	Rock4.Height = 2;
+
+	//std::vector<VolcanoRock> RockQueue({ Rock0, Rock1, Rock2, Rock3, Rock4 });
+	//std::vector<char> GasQueue;
+
+	RingBuffer<VolcanoRock> RockQueue;
+	RockQueue.push_back(Rock0);
+	RockQueue.push_back(Rock1);
+	RockQueue.push_back(Rock2);
+	RockQueue.push_back(Rock3);
+	RockQueue.push_back(Rock4);
+
+	RingBuffer<char> GasQueue;
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+
+		for (const char& Dir : Line)
+		{
+			GasQueue.push_back(Dir);
+		}
+	}
+
+	myfile.close();
+
+	CaveSlice FallingRockSim;
+	FallingRockSim.AddEmptyRow('+');
+	FallingRockSim.AddEmptyRow();
+	FallingRockSim.AddEmptyRow();
+
+	FallingRockSim.Print();
+
+	int RockCt = 0;
+	const int RockGoal = 1;
+	while (RockCt < RockGoal)
+	{
+		FallingRockSim.AddRock(RockQueue.GetNext(), GasQueue);
+		FallingRockSim.Print();
+	}
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day17Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day18Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day18Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day19Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day19Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day20Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day20Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day21Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day21Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day22Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day22Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day23Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day23Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day24Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day24Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day25Part1(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
+unsigned long long Day25Part2(const std::string& Filename, bool bShouldPrint = false)
+{
+	std::ifstream myfile;
+	myfile.open(Filename);
+
+	while (myfile.good())
+	{
+		char line[4096];
+		myfile.getline(line, 4096);
+		std::string Line(line);
+	}
+
+	myfile.close();
+
+	long long Output = 0;
+	return Output;
+}
+
 int main()
 {
 	/*
@@ -3385,12 +3907,95 @@ int main()
 	std::cout << "Day15Part2: " << Day15Part2( Day15Input, 4000000 ) << std::endl;
 	//*/
 
+	/*
 	std::string Day16Sample( "..\\..\\Day16Sample.txt" );
 	std::string Day16Input( "..\\..\\Day16Input.txt" );
 	std::cout << "Day16Part1Sample: " << Day16Part1( Day16Sample ) << std::endl;
 	std::cout << "Day16Part1: " << Day16Part1( Day16Input ) << std::endl;
 	std::cout << "Day16Part2Sample: " << Day16Part2( Day16Sample, true ) << std::endl;
 	std::cout << "Day16Part2: " << Day16Part2( Day16Input ) << std::endl;
+	//*/
+
+	//*
+	std::string Day17Sample("..\\..\\Day17Sample.txt");
+	std::string Day17Input("..\\..\\Day17Input.txt");
+	std::cout << "Day17Part1Sample: " << Day17Part1(Day17Sample) << std::endl;
+	std::cout << "Day17Part1: " << Day17Part1(Day17Input) << std::endl;
+	//std::cout << "Day17Part2Sample: " << Day17Part2(Day17Sample, true) << std::endl;
+	//std::cout << "Day17Part2: " << Day17Part2(Day17Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day18Sample("..\\..\\Day18Sample.txt");
+	std::string Day18Input("..\\..\\Day18Input.txt");
+	std::cout << "Day18Part1Sample: " << Day18Part1(Day18Sample) << std::endl;
+	std::cout << "Day18Part1: " << Day18Part1(Day18Input) << std::endl;
+	std::cout << "Day18Part2Sample: " << Day18Part2(Day18Sample, true) << std::endl;
+	std::cout << "Day18Part2: " << Day18Part2(Day18Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day19Sample("..\\..\\Day19Sample.txt");
+	std::string Day19Input("..\\..\\Day19Input.txt");
+	std::cout << "Day19Part1Sample: " << Day19Part1(Day19Sample) << std::endl;
+	std::cout << "Day19Part1: " << Day19Part1(Day19Input) << std::endl;
+	std::cout << "Day19Part2Sample: " << Day19Part2(Day19Sample, true) << std::endl;
+	std::cout << "Day19Part2: " << Day19Part2(Day19Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day20Sample("..\\..\\Day20Sample.txt");
+	std::string Day20Input("..\\..\\Day20Input.txt");
+	std::cout << "Day20Part1Sample: " << Day20Part1(Day20Sample) << std::endl;
+	std::cout << "Day20Part1: " << Day20Part1(Day20Input) << std::endl;
+	std::cout << "Day20Part2Sample: " << Day20Part2(Day20Sample, true) << std::endl;
+	std::cout << "Day20Part2: " << Day20Part2(Day20Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day21Sample("..\\..\\Day21Sample.txt");
+	std::string Day21Input("..\\..\\Day21Input.txt");
+	std::cout << "Day21Part1Sample: " << Day21Part1(Day21Sample) << std::endl;
+	std::cout << "Day21Part1: " << Day21Part1(Day21Input) << std::endl;
+	std::cout << "Day21Part2Sample: " << Day21Part2(Day21Sample, true) << std::endl;
+	std::cout << "Day21Part2: " << Day21Part2(Day21Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day22Sample("..\\..\\Day22Sample.txt");
+	std::string Day22Input("..\\..\\Day22Input.txt");
+	std::cout << "Day22Part1Sample: " << Day22Part1(Day22Sample) << std::endl;
+	std::cout << "Day22Part1: " << Day22Part1(Day22Input) << std::endl;
+	std::cout << "Day22Part2Sample: " << Day22Part2(Day22Sample, true) << std::endl;
+	std::cout << "Day22Part2: " << Day22Part2(Day22Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day23Sample("..\\..\\Day23Sample.txt");
+	std::string Day23Input("..\\..\\Day23Input.txt");
+	std::cout << "Day23Part1Sample: " << Day23Part1(Day23Sample) << std::endl;
+	std::cout << "Day23Part1: " << Day23Part1(Day23Input) << std::endl;
+	std::cout << "Day23Part2Sample: " << Day23Part2(Day23Sample, true) << std::endl;
+	std::cout << "Day23Part2: " << Day23Part2(Day23Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day24Sample("..\\..\\Day24Sample.txt");
+	std::string Day24Input("..\\..\\Day24Input.txt");
+	std::cout << "Day24Part1Sample: " << Day24Part1(Day24Sample) << std::endl;
+	std::cout << "Day24Part1: " << Day24Part1(Day24Input) << std::endl;
+	std::cout << "Day24Part2Sample: " << Day24Part2(Day24Sample, true) << std::endl;
+	std::cout << "Day24Part2: " << Day24Part2(Day24Input) << std::endl;
+	//*/
+
+	/*
+	std::string Day25Sample("..\\..\\Day25Sample.txt");
+	std::string Day25Input("..\\..\\Day25Input.txt");
+	std::cout << "Day25Part1Sample: " << Day25Part1(Day25Sample) << std::endl;
+	std::cout << "Day25Part1: " << Day25Part1(Day25Input) << std::endl;
+	std::cout << "Day25Part2Sample: " << Day25Part2(Day25Sample, true) << std::endl;
+	std::cout << "Day25Part2: " << Day25Part2(Day25Input) << std::endl;
+	//*/
 
 	std::cin.get();
 
